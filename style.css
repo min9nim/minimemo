@@ -1,0 +1,228 @@
+#writeBtn {
+  display: block;
+}
+
+.dialog, .search {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    display: none;
+    font-size: 14px;
+}
+
+#modal {
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    background-color: gray;
+}
+
+#div_write {
+    position: absolute;
+    width: 90%;
+    height: 20%;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-30%);
+}
+
+.input {
+    height: 100%;
+    border: 1px solid #6699ff;
+    background-color: white;
+    padding: 5px;
+    overflow: auto;
+    font-size: 20px;
+}
+
+
+#btn_cencle {
+    right: 0px;
+}
+
+.txt {
+    display: inline-block;
+    padding-top: 0px;
+    line-height: 26px;
+}
+
+.header {
+    background-color: #26a69a;
+    color: #fff;
+    font-size: 20px;
+    padding-left: 10px;
+}
+
+.header .title {
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.header .state {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.header .message {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#btnSearch {
+  cursor: pointer;
+  vertical-align: middle;
+  float: right;
+  margin-top: 4px;
+  margin-right: 7px;
+}
+
+#topNavi {
+  font-weight: bold;
+  font-size: 30px;
+  line-height: 56px;
+  margin-bottom: 10px;  
+}
+
+#addBtn {
+  font-weight: bold;
+  font-size: 22px;
+  line-height: 50px;
+}
+
+.createDate {
+  color: #999999;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.btnContext {
+  color: #dddddd;
+  font-size: 12px;
+  line-height: 20px;
+  right: 0px;
+  position: absolute;
+  margin-right: 20px;
+}
+
+
+.collection .collection-item.avatar i.circle {
+  width: 50px;
+  height: 50px;
+  font-size: 25px;
+  line-height: 45px;
+  font-weight: bold;
+}
+
+#btn_delete {
+  color: #aaaaaa;
+  top:45% !important;  /* 높이 가운데 정렬 */
+  position: absolute;
+  right:-70px;
+  display: inline-block;
+}
+
+#btn_edit {
+  color: #aaaaaa;
+  top:45% !important;  /* 높이 가운데 정렬 */
+  position: absolute;
+  right:-30px;
+  display: inline-block;
+}
+
+
+
+
+.btn_grp {
+  margin-top: 5px;
+  text-align: center;
+}
+
+#btn_save {
+}
+
+
+#nprogress .bar {
+  position: absolute;
+  top: 30px;
+  background: #708c0c;
+}
+
+#nprogress .spinner {
+    top: 50%;
+    right: 45%;
+}
+
+
+.menu {
+  position: absolute;
+  width: 220px;
+  left: -220px;
+  background-color: white;
+  z-index: 100;
+}
+
+.menu .collection-item {
+  border: 0px;
+  padding-left: 5px;
+}
+
+.menuTitle {
+  display: inline-block;
+  width: 100px;
+}
+.menuTitle i {
+  font-size: 15px;
+  color: white;
+  width: 22px;
+  height: 22px;
+  text-align: center;
+  margin-right: 6px;
+}
+
+.menu li:nth-child(1) .menuTitle i {
+  background-color: #a3150b;
+}
+
+.menu li:nth-child(2) .menuTitle i {
+  background-color: #013f7a;
+}
+
+.menu li:nth-child(3) .menuTitle i {
+  background-color: #c65d07;
+}
+
+input#fontSize {
+  width: 40px;
+  height: 20px;
+  margin: 0px;
+}
+
+input#nickname {
+  width: 80px;
+  height: 20px;
+  margin: 0px;
+}
+
+select#iconColor {
+  display: inline-block;
+  width: 80px;
+  height: 22px;
+  margin: 0px;
+  padding: 0px;
+}
+
+.menuContent {
+  display: inline-block;
+}
+
+
+#btnMenu {
+  vertical-align: middle;
+}
+
+.material-icons.circle {
+  cursor: pointer;
+}

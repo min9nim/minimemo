@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+        <!--Import Google Icon Font-->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!-- Compiled and minified CSS -->
+        <link rel="stylesheet" href="ext/materialize.min.css">
+        <link rel='stylesheet' href='ext/nprogress.css'/>
+        <link rel="stylesheet" href="style.css">
+        <title>minimemo project :)</title>
+    </head>
+
+    <body onscroll="bodyScroll();">
+        <div class="header">
+          <i id="btnMenu" class='material-icons' onclick="menuClick();">menu</i>
+          <div class="title" onclick="showMemoList(uid_disp);">minimemo is loading..</div>
+          <div class="state"></div>
+          <div class="message"></div>
+          <i id="btnSearch" class='material-icons' onclick="searchClick();">search</i>
+        </div>
+        <ul class="menu collection">
+          <li class="collection-item"><div class="menuTitle"><i class="material-icons circle">N</i>nickname</div><div class="menuContent"><input id="nickname" type="text" onchange="setNickname(this.value);" /></div></li>
+          <li class="collection-item"><div class="menuTitle"><i class="material-icons circle">F</i>fontSize</div><div class="menuContent"><input id="fontSize" type="number" onchange="setFontSize(this.value);" /></div></li>
+          <li class="collection-item"><div class="menuTitle"><i class="material-icons circle">I</i>iconColor</div><div class="menuContent"><select  id="iconColor" onchange="setIconColor(this.value);">
+<option value="all">all</option>
+  <option value="red">red</option>
+  <option value="orange">orange</option>
+  <option value="yellow">yellow</option>
+  <option value="green">green</option>
+  <option value="blue">blue</option>
+  <option value="purple">purple</option>
+  <option value="pink">pink</option>
+  <option value="monochrome">monochrome</option>
+</select></div></li>
+        </ul>
+        <ul id="list" class="collection" onclick="listClick();" ontouchstart="listClick();"></ul>
+        <div id="topBtn" class="fixed-action-btn" style="bottom: 110px; right: 24px;">
+          <a class="btn-floating btn-large waves-effect waves-light" style="opacity: 0.3;background-color:rgb(0, 140, 32)" onclick="topNavi();"> <i id="topNavi" class="material-icons">arrow_upward</i> </a>
+        </div>
+        <div id="writeBtn" class="fixed-action-btn" style="bottom: 45px; right: 24px;">
+          <a class="btn-floating btn-large waves-effect waves-light" style="opacity: 0.7;" onclick="writeMemo();"> <i id="addBtn" class="material-icons">쓰기</i> </a>
+        </div>
+        <div class="dialog">
+            <div id="modal"></div>
+            <div id="div_write"><textarea id="input" class="input" placeholder="" onkeydown="keydownCheck(event);"></textarea>
+                <div class="btn_grp">
+                    <div id="btn_save" class="btn" onclick="saveMemo();">저장</div>
+                    <div id="btn_cancel" class="btn" onclick="cancelWrite();">취소</div>
+                </div>
+            </div>
+        </div>
+        <div class="search">
+            <div id="modal"></div>
+            <div id="div_write"><textarea id="input2" class="input" placeholder="" onkeydown="keydownCheck(event);"></textarea>
+                <div class="btn_grp">
+                    <div id="btn_search" class="btn" onclick="searchMemo();">검색</div>
+                    <div id="btn_cancel" class="btn" onclick="cancelSearch();">취소</div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="ext/jquery-3.2.1.js"></script>
+        <script src="ext/materialize.min.js"></script>
+
+        <script type="text/javascript" src="util.js"></script>
+        <script type="text/javascript" src="sn.js"></script>
+        <script type="text/javascript" src='ext/autolink.js'></script>
+        <script type="text/javascript" src='ext/nprogress.js'></script>
+        <script type="text/javascript" src='ext/randomColor.js'></script>
+        <script type="text/javascript" src='ext/shortcut.js'></script>
+        <script src="https://www.gstatic.com/firebasejs/4.3.0/firebase.js"></script>
+        <script>
+            // Initialize Firebase
+            var config = {
+              apiKey: "AIzaSyDrdUoYgtjhIGHOLxvEQtq3oUlximeEMI8",
+              authDomain: "minimemo-3ea72.firebaseapp.com",
+              databaseURL: "https://minimemo-3ea72.firebaseio.com",
+              projectId: "minimemo-3ea72",
+              storageBucket: "minimemo-3ea72.appspot.com",
+              messagingSenderId: "55060595181"
+            };
+            firebase.initializeApp(config);
+            var userInfo = null; // 로그인한 사용자 정보
+            var uid_disp; // display할 글목록의 uid
+            var nickname = location.href.split("/")[3];
+            var memoRef;
+            var memoList = [];
+            var visibleRowCnt = 50;
+
+            NProgress.start();  // https://github.com/rstacruz/nprogress
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {// 인증완료
+                    userInfo = user;
+                    $("#writeBtn").show();
+                    firebase.database().ref("users/"+userInfo.uid).once('value').then(function(snapshot){
+                        userInfo.data = snapshot.val();
+                        setHeader();
+                    });;
+                }else{
+                  userInfo = null;
+                  setHeader();
+                }
+                if (nickname != "") {
+                    // url 사용자 정보가 우선
+                    var userRef = firebase.database().ref("users").orderByChild("nickname").equalTo(nickname);
+                    userRef.on('child_added', function(data) {
+                        uid_disp = data.key;
+                        initMemoList(uid_disp);
+                    });
+                    // userRef 접근에 대한 오류 처리 코드 필요, 결과가 없을 경우에 대한 예외처리 필요
+                } else {
+                    uid_disp = user ? userInfo.uid : "";
+                    if(uid_disp == ""){
+                      // 로그아웃 되었을 때 공통처리
+                      userInfo = null;
+                      $("#list").html("");
+                      $("#writeBtn").hide();
+                      NProgress.done();
+                      NProgress.remove();
+                      //alert("사용자 정보가 없습니다. 로그인페이지로 이동합니다.");
+                      firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());  // 인증 후 콜백처리는 어케 하는지 모르게씸;;
+                    }else {
+                      initMemoList(uid_disp);
+                    }
+                }
+            });
+
+            firebase.database().ref(".info/connected").on("value", function(snap) {
+              if (snap.val() === true) {
+                if(userInfo != null)
+                  userInfo.isConnected = true;
+                //$(".state").html("online");
+                $("#writeBtn").show();
+                $("#addBtn").html("쓰기");
+              } else {
+                if(userInfo != null)
+                  userInfo.isConnected = false;
+                //userInfo = null;  // 로그인이 유지된 상태에서도 디비연결이 잠깐 끊어질 수는 있다
+                //$(".state").html("offline");
+                //$("#list").html("");
+                $("#writeBtn").hide();
+                setTimeout(function(){
+                  if(userInfo.isConnected == false){
+                    $("#writeBtn").show();
+                    $("#addBtn").html("로긴");
+                  }
+                }, 3000);
+                //alert("연결상태가 끊어졌습니다.");
+              }
+            });
+
+
+            // 단축키 설정
+            shortcut.add("Alt+W",function() {
+            	writeMemo();
+            });
+            shortcut.add("Alt+S",function() {
+              searchClick();
+            });
+        </script>
+    </body>
+
+</html>
