@@ -4,14 +4,12 @@ function showMemoList(uid) {
   $("#list").text("");
 
   memoRef.limitToLast(visibleRowCnt).once("value").then(function(snapshot){
-    NProgress.done();
-//    NProgress.remove();
-    //console.log("## once called..")
     var memoObj = snapshot.val();
     for(key in memoObj){
       addItem(key, memoObj[key]);
     }
     $(".header .title").html(userInfo.data.nickname + "'s "+memoList.length+" memos");
+    NProgress.done();
   });
 }
 
