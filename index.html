@@ -15,7 +15,7 @@
     <body onscroll="bodyScroll();">
         <div class="header">
           <i id="btnMenu" class='material-icons' onclick="menuClick();">menu</i>
-          <div class="title" onclick="showMemoList(uid_disp);">minimemo is loading..</div>
+          <div class="title" onclick="titleClick();">minimemo is loading..</div>
           <div class="state"></div>
           <div class="message"></div>
           <i id="btnSearch" class='material-icons' onclick="searchClick();">search</i>
@@ -82,8 +82,6 @@
             };
             firebase.initializeApp(config);
             var userInfo = null; // 로그인한 사용자 정보
-            var uid_disp; // display할 글목록의 uid
-            var nickname = location.href.split("/")[3];
             var memoRef;
             var memoList = [];
             var visibleRowCnt = 50;
@@ -93,52 +91,33 @@
                 if (user) {// 인증완료
                     userInfo = user;
                     $("#writeBtn").show();
-                    firebase.database().ref("users/"+userInfo.uid).once('value').then(function(snapshot){
+                    var userRef = firebase.database().ref("users/"+userInfo.uid);
+                    userRef.once('value').then(function(snapshot){
                         if(snapshot.val() != null){
                           userInfo.data = snapshot.val();
                           setHeader();
+                          initMemoList(userInfo.uid);
                         }else{// 신규 로그인 경우
-                          var userRef = firebase.database().ref("users");
-                          userRef.on('child_added', function(data){
-                            userInfo.data = data.val();
-                            setHeader();
-                          });
-
-                          userRef.push({// 신규가입자 처리 문제 어떻게 할 것인가
+                          var userData = {
                             fontSize : "18px",
                             iconColor : "green",
-                            "id" : userInfo.email,
-                            "nickname" : userInfo.email.split("@")[0]
+                            id : userInfo.email,
+                            nickname : userInfo.email.split("@")[0]
+                          };
+                          userRef.set(userData, function(){
+                            userInfo.data = userData;
+                            setHeader();
+                            initMemoList(userInfo.uid);
                           });
                         }
-
                     });
                 }else{
                   userInfo = null;
                   setHeader();
-                }
-                if (nickname != "") {
-                    // url 사용자 정보가 우선
-                    var userRef = firebase.database().ref("users").orderByChild("nickname").equalTo(nickname);
-                    userRef.on('child_added', function(data) {
-                        uid_disp = data.key;
-                        initMemoList(uid_disp);
-                    });
-                    // userRef 접근에 대한 오류 처리 코드 필요, 결과가 없을 경우에 대한 예외처리 필요
-                } else {
-                    uid_disp = user ? userInfo.uid : "";
-                    if(uid_disp == ""){
-                      // 로그아웃 되었을 때 공통처리
-                      userInfo = null;
-                      $("#list").html("");
-                      $("#writeBtn").hide();
-                      NProgress.done();
-                      NProgress.remove();
-                      //alert("사용자 정보가 없습니다. 로그인페이지로 이동합니다.");
-                      firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());  // 인증 후 콜백처리는 어케 하는지 모르게씸;;
-                    }else {
-                      initMemoList(uid_disp);
-                    }
+                  NProgress.done();
+                  if(confirm("로그인이 필요합니다")){
+                    firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+                  }
                 }
             });
 
@@ -161,7 +140,7 @@
                     $("#writeBtn").show();
                     $("#addBtn").html("로긴");
                   }
-                }, 3500);
+                }, 5000);
                 //alert("연결상태가 끊어졌습니다.");
               }
             });

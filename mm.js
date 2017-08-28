@@ -68,7 +68,7 @@ function getMemoHtml(key, memoData){
   //console.log("txt = " + txt + ", firstTxt = " + firstTxt);
   var removeBtn = "";
   var editBtn = "";
-  if(typeof userInfo != null && userInfo.uid == uid_disp){// 내가 작성한 글인 경우만 수정/삭제버튼이 표시
+  if(typeof userInfo != null){// 내가 작성한 글인 경우만 수정/삭제버튼이 표시
       removeBtn = `<i id='btn_delete' onclick='removeMemo("${key}")' class='material-icons'>delete</i>`;
       editBtn = `<i id='btn_edit' onclick='editMemo("${key}")' class='material-icons'>edit</i>`;
   }
@@ -255,15 +255,12 @@ function keydownCheck(event){
 
 
 function setHeader(){
-  if(nickname){
-    $(".header .title").html(nickname + "'s memo");
-  }else if(userInfo != null){
-    //$(".header .title").html(userInfo.data.nickname + "'s "+memoList.length+"memos");
+  if(userInfo != null){
     $("#nickname").val(userInfo.data.nickname);
     $("#fontSize").val(userInfo.data.fontSize.replace("px",""));
     $("#iconColor").val(userInfo.data.iconColor);
   }else{
-    $(".header .title").html("Lounge");
+    $(".header .title").html("minimemo");
   }
 }
 
@@ -402,4 +399,12 @@ function bodyScroll(){
 
 function topNavi(){
   $(window).scrollTop(0);
+}
+
+function titleClick(){
+  if(userInfo){
+    showMemoList(userInfo.uid);
+  }else{
+    firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+  }
 }
