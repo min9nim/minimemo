@@ -75,7 +75,7 @@ function getMemoHtml(key, memoData){
 
   var color = randomColor({hue: userInfo.data.iconColor, luminosity: 'dark'});  // https://randomcolor.llllll.li/
 
-  var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="searchFirstTxt('${memoData.txt.substr(0, 1)}')">${firstTxt}</i>
+  var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="searchFirstTxt()">${firstTxt}</i>
                 <p><i class='createDate'>${createDate}</i><i class='btnContext'><<</i>
                 <div class='txt' style="font-size:${userInfo.data.fontSize};">${txt}</div></p>${removeBtn}${editBtn}`;
 
@@ -333,15 +333,18 @@ function signout(){
 }
 
 
-function searchFirstTxt(firstTxt){
+function searchFirstTxt(){
+  var firstTxt = event.target.innerText;
   var memoRef = firebase.database().ref('memos/' + userInfo.uid);
   memoRef.once("value").then(function(snapshot){
     $("#list").html("");
+    var reg = new RegExp(firstTxt, "i");
     var memoObj = snapshot.val();
     for(key in memoObj){
-      if(memoObj[key].txt.indexOf(firstTxt) == 0)
-        //console.log(memoObj[key].txt);
+      var res = reg.exec(memoObj[key].txt);
+      if(res !== null && res.index == 0){
         addItem(key, memoObj[key]);
+      }
     }
     $(".header .title").html(memoList.length+" memos");
     $(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> 's ${$("#list li").length} results`);
