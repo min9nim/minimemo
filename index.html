@@ -94,9 +94,25 @@
                     userInfo = user;
                     $("#writeBtn").show();
                     firebase.database().ref("users/"+userInfo.uid).once('value').then(function(snapshot){
-                        userInfo.data = snapshot.val();
-                        setHeader();
-                    });;
+                        if(snapshot.val() != null){
+                          userInfo.data = snapshot.val();
+                          setHeader();
+                        }else{// 신규 로그인 경우
+                          var userRef = firebase.database().ref("users");
+                          userRef.on('child_added', function(data){
+                            userInfo.data = data.val();
+                            setHeader();
+                          });
+
+                          userRef.push({// 신규가입자 처리 문제 어떻게 할 것인가
+                            fontSize : "18px",
+                            iconColor : "green",
+                            "id" : userInfo.email,
+                            "nickname" : userInfo.email.split("@")[0]
+                          });
+                        }
+
+                    });
                 }else{
                   userInfo = null;
                   setHeader();
