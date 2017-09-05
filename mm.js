@@ -14,11 +14,11 @@ function showMemoList(uid) {
 }
 
 function initMemoList(uid) {
-  //var memoRef = firebase.database().ref('memos/' + uid).limitToLast(100);
-  memoRef = firebase.database().ref('memos/' + uid);
-  memoRef.on('child_added', onChildAdded);
-  memoRef.on('child_changed', onChildChanged);
-  memoRef.on('child_removed', onChildRemoved);
+  //var memoRef = firebase.database().ref("memos/" + uid).limitToLast(100);
+  memoRef = firebase.database().ref("memos/" + uid);
+  memoRef.on("child_added", onChildAdded);
+  memoRef.on("child_changed", onChildChanged);
+  memoRef.on("child_removed", onChildRemoved);
   showMemoList(uid);
 }
 
@@ -69,15 +69,15 @@ function getMemoHtml(key, memoData){
   var removeBtn = "";
   var editBtn = "";
   if(typeof userInfo != null){// 내가 작성한 글인 경우만 수정/삭제버튼이 표시
-      removeBtn = `<i id='btn_delete' onclick='removeMemo("${key}")' class='material-icons'>delete</i>`;
-      editBtn = `<i id='btn_edit' onclick='editMemo("${key}")' class='material-icons'>edit</i>`;
+      removeBtn = `<i id="btn_delete" onclick='removeMemo("${key}")' class="material-icons">delete</i>`;
+      editBtn = `<i id="btn_edit" onclick='editMemo("${key}")' class="material-icons">edit</i>`;
   }
 
-  var color = randomColor({hue: userInfo.data.iconColor, luminosity: 'dark'});  // https://randomcolor.llllll.li/
+  var color = randomColor({hue: userInfo.data.iconColor, luminosity: "dark"});  // https://randomcolor.llllll.li/
 
   var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="searchFirstTxt()">${firstTxt}</i>
-                <p><i class='createDate'>${createDate}</i><i class='btnContext'><<</i>
-                <div class='txt' style="font-size:${userInfo.data.fontSize};">${txt}</div></p>${removeBtn}${editBtn}`;
+                <p><i class="createDate">${createDate}</i><i class="btnContext"><<</i>
+                <div class="txt" style="font-size:${userInfo.data.fontSize};">${txt}</div></p>${removeBtn}${editBtn}`;
 
   var li = `<li id="${key}" class="collection-item avatar">${liChild}</li>`;
   var html = {};
@@ -104,7 +104,7 @@ function onChildChanged(data) {
 function onChildRemoved(data) {
 //  console.log("## onChildRemoved called..");
   var key = data.key;
-  $('#' + key).remove();
+  $("#" + key).remove();
   memoList.splice(memoList.indexOf(data),1);  // memoList에서 삭제된 요소 제거
   $(".header .title").html(userInfo.data.nickname + "'s "+memoList.length+" memos");
 }
@@ -117,7 +117,7 @@ function saveMemo() {
       alert("3000자 이내로 입력 가능");
       return;
     }
-    if (txt === '') {
+    if (txt === "") {
         alert("내용을 입력해 주세요");
         return;
     }
@@ -125,12 +125,12 @@ function saveMemo() {
     $(".dialog").css("display", "none");
 
     if(key == ""){// 저장
-      firebase.database().ref('memos/' + userInfo.uid).push({
+      firebase.database().ref("memos/" + userInfo.uid).push({
           txt: txt,
           createDate: new Date().getTime()
       });
     }else{// 수정
-      firebase.database().ref('memos/' + userInfo.uid + "/" + key).update({
+      firebase.database().ref("memos/" + userInfo.uid + "/" + key).update({
           txt: txt,
           createDate: new Date().getTime()
       });
@@ -141,16 +141,16 @@ function saveMemo() {
 
 function fn_get_data_one(key) {
     selectedKey = key;
-    var memoRef = firebase.database().ref('memos/' + userInfo.uid + '/' + key).once('value').then(function(snapshot){
-        $('.textarea').val(snapshot.val().txt);
+    var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function(snapshot){
+        $(".textarea").val(snapshot.val().txt);
     });
 }
 
 function removeMemo(key) {
   if (userInfo != null && userInfo.isConnected) {
     if (confirm("삭제하시겠습니까?")) {
-        firebase.database().ref('memos/' + userInfo.uid + '/' + key).remove();
-        //$('#' + key).remove();
+        firebase.database().ref("memos/" + userInfo.uid + "/" + key).remove();
+        //$("#" + key).remove();
     }
   }else{
     alert("로그인이 필요합니다");
@@ -159,7 +159,7 @@ function removeMemo(key) {
 
 function editMemo(key) {
   if (userInfo != null && userInfo.isConnected) {
-    var memoRef = firebase.database().ref('memos/' + userInfo.uid + '/' + key).once('value').then(function(snapshot){
+    var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function(snapshot){
       $(".dialog").css("display", "block");
       $("#input").val(snapshot.val().txt);
       $("#input").focus();
@@ -203,7 +203,7 @@ function searchMemo(){
     alert("100자 이내로 입력 가능");
     return;
   }
-  if (txt === '') {
+  if (txt === "") {
       alert("내용을 입력해 주세요");
       return;
   }
@@ -325,14 +325,14 @@ function signout(){
     //alert('Signed Out');
     // index.html 의 로그아웃 공통처리 로직이 수행됨
   }, function(error) {
-    console.error('Sign Out Error', error);
+    console.error("Sign Out Error", error);
   });
 }
 
 
 function searchFirstTxt(){
   var firstTxt = event.target.innerText;
-  var memoRef = firebase.database().ref('memos/' + userInfo.uid);
+  var memoRef = firebase.database().ref("memos/" + userInfo.uid);
   memoRef.once("value").then(function(snapshot){
     $("#list").html("");
     var reg = new RegExp(firstTxt, "i");
@@ -344,7 +344,7 @@ function searchFirstTxt(){
       }
     }
     $(".header .title").html(memoList.length+" memos");
-    $(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> 's ${$("#list li").length} results`);
+    $(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$("#list li").length} results`);
     // 매칭단어 하이라이트닝
     $(".txt").each(function(i){
       this.innerHTML = this.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
@@ -354,22 +354,22 @@ function searchFirstTxt(){
 
 function setNickname(nickname){
   userInfo.data.nickname = nickname;
-  firebase.database().ref('users/' + userInfo.uid).update(userInfo.data);
+  firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
   $(".header .title").html(userInfo.data.nickname + "'s "+memoList.length+" memos");
 }
 
 
 function setFontSize(size){
   userInfo.data.fontSize = size+"px";
-  firebase.database().ref('users/' + userInfo.uid).update(userInfo.data);
+  firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
   $(".txt").css("font-size", userInfo.data.fontSize);
 }
 
 function setIconColor(color){
   userInfo.data.iconColor = color;
-  firebase.database().ref('users/' + userInfo.uid).update(userInfo.data);
+  firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
   $("#list i.circle").each(function(i){
-    var bgcolor = randomColor({hue: color, luminosity: 'dark'});
+    var bgcolor = randomColor({hue: color, luminosity: "dark"});
     $(this).css("background-color", bgcolor);
   });
 }
