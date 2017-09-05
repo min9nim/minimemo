@@ -1,13 +1,12 @@
-
 function showMemoList(uid) {
   $(".state").text("");
   $("#list").text("");
 
   memoRef.limitToLast(visibleRowCnt).once("value").then(function(snapshot){
     var memoObj = snapshot.val();
-    for(key in memoObj){
-      addItem(key, memoObj[key]);
-    }
+    Object.keys(memoObj).forEach(function(key){
+    	addItem(key, memoObj[key]);
+    });
     $(".header .title").html(userInfo.data.nickname + "'s "+memoList.length+" memos");
     NProgress.done();
   });
@@ -31,7 +30,7 @@ function onChildAdded(data) {
   //console.log(diff);
   if(diff < 1000){// 방금 새로 등록한 글인 경우만
     addItem(data.key, data.val());
-    if($(".state").html() == ""){
+    if($(".state").html() === ""){
       $(".header .title").html(userInfo.data.nickname + "'s "+memoList.length+" memos");
     }else{
       $(".header .title").html(memoList.length+" memos");
@@ -147,7 +146,7 @@ function fn_get_data_one(key) {
 }
 
 function removeMemo(key) {
-  if (userInfo != null && userInfo.isConnected) {
+  if (userInfo && userInfo.isConnected) {
     if (confirm("삭제하시겠습니까?")) {
         firebase.database().ref("memos/" + userInfo.uid + "/" + key).remove();
         //$("#" + key).remove();
@@ -158,7 +157,7 @@ function removeMemo(key) {
 }
 
 function editMemo(key) {
-  if (userInfo != null && userInfo.isConnected) {
+  if (userInfo && userInfo.isConnected) {
     var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function(snapshot){
       $(".dialog").css("display", "block");
       $("#input").val(snapshot.val().txt);
@@ -172,7 +171,7 @@ function editMemo(key) {
 
 
 function writeMemo() {
-    if (userInfo != null && userInfo.isConnected) {
+    if (userInfo && userInfo.isConnected) {
       $(".dialog").css("display", "block");
       $("#input").val("");
       $("#input").focus();
@@ -185,7 +184,7 @@ function writeMemo() {
 
 
 function searchClick() {
-    if (userInfo != null && userInfo.isConnected) {
+    if (userInfo && userInfo.isConnected) {
       $(".search").css("display", "block");
       $("#input2").val("");
       $("#input2").focus();
