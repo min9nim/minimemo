@@ -221,7 +221,7 @@ function searchMemo(){
     $(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$("#list li").length} results`);
 
     // 매칭단어 하이라이트닝
-    var reg = new RegExp(txt, "g");
+    var reg = new RegExp(txt, "gi");
     $(".txt").each(function(i){
       this.innerHTML = this.innerHTML.replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
     });
