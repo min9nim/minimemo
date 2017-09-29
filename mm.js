@@ -126,12 +126,13 @@ function saveMemo() {
     if(key == ""){// 저장
       firebase.database().ref("memos/" + userInfo.uid).push({
           txt: txt,
-          createDate: new Date().getTime()
+          createDate: new Date().getTime(),
+          updateDate: new Date().getTime()
       });
     }else{// 수정
       firebase.database().ref("memos/" + userInfo.uid + "/" + key).update({
           txt: txt,
-          createDate: new Date().getTime()
+          updateDate: new Date().getTime()
       });
     }
 }
