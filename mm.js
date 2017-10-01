@@ -173,6 +173,9 @@ function editMemo(key) {
 
 function writeMemo() {
     if (userInfo && userInfo.isConnected) {
+        if($(".search").css("display") == "block"){
+            return;     // 글검색 상태인 경우에는 취소
+        }
       $(".dialog").css("display", "block");
       $("#input").val("");
       $("#input").focus();
@@ -186,9 +189,12 @@ function writeMemo() {
 
 function searchClick() {
     if (userInfo && userInfo.isConnected) {
-      $(".search").css("display", "block");
-      $("#input2").val("");
-      $("#input2").focus();
+        if($(".dialog").css("display") == "block"){
+            return; // 글쓰기 상태라면 취소
+        }
+        $(".search").css("display", "block");
+        $("#input2").val("");
+        $("#input2").focus();
     } else {
       alert("로그인이 필요합니다");
       //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
