@@ -314,6 +314,7 @@ function setTouchSlider(row){
 }
 
 
+
 function menuClick(){
   if($(".menu").css("left") == "0px"){
     $(".menu").animate({left:"-220px"},300);
