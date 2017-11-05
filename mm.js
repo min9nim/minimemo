@@ -351,10 +351,10 @@ define(["jquery"
 
         // 단축키 설정
         $shortcut.add("Alt+W", function () {
-            writeMemo();
+            mm.writeMemo();
         });
         $shortcut.add("Alt+S", function () {
-            searchClick();
+            mm.searchClick();
         });
 
     };
