@@ -509,9 +509,9 @@ define(["jquery"
         var keycode = (event.which) ? event.which : event.keyCode;
         if ((event.metaKey || event.altKey) && keycode == 13) {
             if ($(".dialog").css("display") == "block") {
-                saveMemo();
+                mm.saveMemo();
             } else {
-                searchMemo();
+                mm.searchMemo();
             }
             event.preventDefault();
             return false;
