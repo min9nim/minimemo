@@ -17,9 +17,6 @@ requirejs.config({
         util : "../util"
     },
     shim : {
-        "util" : {
-            exports: "$m"
-        },
         "shortcut" : {
             exports: "shortcut"
         }
@@ -27,8 +24,9 @@ requirejs.config({
     }
 });
 
-require(["mm"], function(mm){
+require(["mm", "util"], function(mm, $m){
     window.mm = mm;
+    window.$m = $m;
     //window.onload = mn.init;      // 모바일 사파리에서 실행시점이 안 맞을 때가 있는 거 같음..
     mm.init();
 });

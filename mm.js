@@ -51,7 +51,7 @@ define(["jquery"
     function onChildAdded(data) {
         //console.log("## onChildAdded called");
         memoList.push(data);
-        var curDate = new Date().getTime();
+        var curDate = Date.now();
         var createDate = data.val().createDate;
         var diff = curDate - createDate;
         //console.log(diff);
@@ -130,14 +130,6 @@ define(["jquery"
         $("#" + key).remove();
         memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
         $(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
-    }
-
-
-    function fn_get_data_one(key) {
-        selectedKey = key;
-        var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
-            $(".textarea").val(snapshot.val().txt);
-        });
     }
 
 
@@ -234,6 +226,74 @@ define(["jquery"
         });
     }
 
+    function setShortcut(){
+        // 단축키 설정
+        $shortcut.add("Alt+W", function () {
+            mm.writeMemo();
+        });
+        $shortcut.add("Alt+S", function () {
+            mm.searchClick();
+        });
+    }
+
+    function login(){
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {// 인증완료
+                userInfo = user;
+                $("#writeBtn").show();
+                var userRef = firebase.database().ref("users/" + userInfo.uid);
+                userRef.once('value').then(function (snapshot) {
+                    if (snapshot.val() != null) {
+                        userInfo.data = snapshot.val();
+                        setHeader();
+                        initMemoList(userInfo.uid);
+                    } else {// 신규 로그인 경우
+                        var userData = {
+                            fontSize: "18px",
+                            iconColor: "green",
+                            email: userInfo.email,
+                            nickname: userInfo.email.split("@")[0]
+                        };
+                        userRef.set(userData, function () {
+                            userInfo.data = userData;
+                            setHeader();
+                            initMemoList(userInfo.uid);
+                        });
+                    }
+                });
+            } else {
+                userInfo = null;
+                setHeader();
+                $nprogress.done();
+                if (confirm("로그인이 필요합니다")) {
+                    firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+                }
+            }
+        });
+    }
+
+    function conOn () {
+        if (userInfo != null){
+            userInfo.isConnected = true;
+        }
+        $("#writeBtn").show();
+        $("#addBtn").html("쓰기");
+    }
+
+    function conOff () {
+        if (userInfo != null){
+            userInfo.isConnected = false;
+        }
+        $("#writeBtn").hide();
+        setTimeout(function () {// 20초 동안 연결이 끊어져 있는 경우라면
+            if (userInfo.isConnected == false) {
+                $("#writeBtn").show();
+                $("#addBtn").html("로긴");
+            }
+        }, 20000);
+        //alert("연결상태가 끊어졌습니다.");
+    }
+
     mm.setNickname = function (nickname) {
         userInfo.data.nickname = nickname;
         firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
@@ -290,73 +350,17 @@ define(["jquery"
     mm.init = function () {
         $nprogress.start();  // https://github.com/rstacruz/nprogress
 
-        firebase.auth().onAuthStateChanged(function (user) {
-            if (user) {// 인증완료
-                userInfo = user;
-                $("#writeBtn").show();
-                var userRef = firebase.database().ref("users/" + userInfo.uid);
-                userRef.once('value').then(function (snapshot) {
-                    if (snapshot.val() != null) {
-                        userInfo.data = snapshot.val();
-                        setHeader();
-                        initMemoList(userInfo.uid);
-                    } else {// 신규 로그인 경우
-                        var userData = {
-                            fontSize: "18px",
-                            iconColor: "green",
-                            email: userInfo.email,
-                            nickname: userInfo.email.split("@")[0]
-                        };
-                        userRef.set(userData, function () {
-                            userInfo.data = userData;
-                            setHeader();
-                            initMemoList(userInfo.uid);
-                        });
-                    }
-                });
-            } else {
-                userInfo = null;
-                setHeader();
-                $nprogress.done();
-                if (confirm("로그인이 필요합니다")) {
-                    firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-                }
-            }
-        });
+        login();
+
+        setShortcut();
 
         firebase.database().ref(".info/connected").on("value", function (snap) {
             if (snap.val() === true) {
-                if (userInfo != null)
-                    userInfo.isConnected = true;
-                //$(".state").html("online");
-                $("#writeBtn").show();
-                $("#addBtn").html("쓰기");
+                conOn();
             } else {
-                if (userInfo != null)
-                    userInfo.isConnected = false;
-                //userInfo = null;  // 로그인이 유지된 상태에서도 디비연결이 잠깐 끊어질 수는 있다
-                //$(".state").html("offline");
-                //$("#list").html("");
-                $("#writeBtn").hide();
-                setTimeout(function () {
-                    if (userInfo.isConnected == false) {
-                        $("#writeBtn").show();
-                        $("#addBtn").html("로긴");
-                    }
-                }, 20000);
-                //alert("연결상태가 끊어졌습니다.");
+                conOff();
             }
         });
-
-
-        // 단축키 설정
-        $shortcut.add("Alt+W", function () {
-            mm.writeMemo();
-        });
-        $shortcut.add("Alt+S", function () {
-            mm.searchClick();
-        });
-
     };
 
 
@@ -423,13 +427,13 @@ define(["jquery"
         if (key == "") {// 저장
             firebase.database().ref("memos/" + userInfo.uid).push({
                 txt: txt,
-                createDate: new Date().getTime(),
-                updateDate: new Date().getTime()
+                createDate: Date.now(),
+                updateDate: Date.now()
             });
         } else {// 수정
             firebase.database().ref("memos/" + userInfo.uid + "/" + key).update({
                 txt: txt,
-                updateDate: new Date().getTime()
+                updateDate: Date.now()
             });
         }
     };
@@ -514,6 +518,7 @@ define(["jquery"
                 mm.searchMemo();
             }
             event.preventDefault();
+            event.stopPropagation();
             return false;
         }
     };
