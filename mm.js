@@ -23,6 +23,8 @@ define(["jquery"
         , visibleRowCnt = 50
     ;
 
+    mm.memoList = memoList;
+
 
     // local function
     function showMemoList(uid) {
@@ -391,9 +393,11 @@ define(["jquery"
         memoRef.once("value").then(function (snapshot) {
             $("#list").html("");
             var memoObj = snapshot.val();
+            var txts = [];
             for (key in memoObj) {
                 if (memoObj[key].txt.indexOf(txt) >= 0) {
                     addItem(key, memoObj[key]);
+                    txts.push(memoObj[key].txt);
                 }
             }
             $(".header .title").html(memoList.length + " memos");
@@ -401,8 +405,11 @@ define(["jquery"
 
             // 매칭단어 하이라이트닝
             var reg = new RegExp(txt, "gi");
-            $(".txt").each(function (i) {
-                this.innerHTML = this.innerHTML.replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
+            $(".txt").each(function (i, dom) {
+                var oriTxt = txts[txts.length-1-i];
+                oriTxt = oriTxt.replaceAll("\n", "<br/>");  // 새줄표시
+                oriTxt = oriTxt.replaceAll(" ", "&nbsp;");  // 공백표시
+                this.innerHTML = oriTxt.replace(reg, `<span style="background-color:yellow;">${txt}</span>`); //검색할 때 링크는 제공하지 않음; 처리 어려움;;
             });
 
         });
