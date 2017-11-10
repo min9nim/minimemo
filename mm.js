@@ -88,10 +88,10 @@ define(["jquery"
         var createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
         var firstTxt = txt.substr(0, 1).toUpperCase();
 
-        txt = txt.replaceAll("<", "&lt;").replaceAll(">", "&gt;");  // XSS 방어코드
-        txt = txt.replaceAll("\n", "<br/>");  // 새줄표시
-        txt = txt.replaceAll(" ", "&nbsp;");  // 공백표시
-        txt = txt.autoLink({target: "_blank"});
+        txt = txt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
+                .replace(/\n/gi, "<br/>")  // 새줄표시
+                .replace(/[\s]/gi, "&nbsp;")  // 공백표시
+                .autoLink({target: "_blank"});
 
         //console.log("txt = " + txt + ", firstTxt = " + firstTxt);
         var removeBtn = "";
@@ -407,8 +407,9 @@ define(["jquery"
             var reg = new RegExp(txt, "gi");
             $(".txt").each(function (i, dom) {
                 var oriTxt = txts[txts.length-1-i];
-                oriTxt = oriTxt.replaceAll("\n", "<br/>");  // 새줄표시
-                oriTxt = oriTxt.replaceAll(" ", "&nbsp;");  // 공백표시
+                oriTxt = oriTxt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
+                                .replace(/\n/gi, "<br/>")  // 새줄표시
+                                .replace(/[\s]dd/gi, "&nbsp;");  // 공백표시
                 this.innerHTML = oriTxt.replace(reg, `<span style="background-color:yellow;">${txt}</span>`); //검색할 때 링크는 제공하지 않음; 처리 어려움;;
             });
 
