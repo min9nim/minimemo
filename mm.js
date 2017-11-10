@@ -103,7 +103,7 @@ define(["jquery"
 
         var color = $randomcolor({hue: userInfo.data.iconColor, luminosity: "dark"});  // https://randomcolor.llllll.li/
 
-        var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="searchFirstTxt()">${firstTxt}</i>
+        var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="mm.searchFirstTxt()">${firstTxt}</i>
                 <p><i class="createDate">${createDate}</i><i class="btnContext"><<</i>
                 <div class="txt" style="font-size:${userInfo.data.fontSize};">${txt}</div></p>${removeBtn}${editBtn}`;
 
@@ -206,7 +206,7 @@ define(["jquery"
     }
 
 
-    function searchFirstTxt() {
+    mm.searchFirstTxt = function () {
         var firstTxt = event.target.innerText;
         var memoRef = firebase.database().ref("memos/" + userInfo.uid);
         memoRef.once("value").then(function (snapshot) {
