@@ -72,9 +72,9 @@ define(["jquery"
         var html = getMemoHtml(key, memoData);
 
         if (how == "append") {
-            $("#list").append(html.li);
+            $m("#list").append(html.li);
         } else {
-            $("#list").prepend(html.li);
+            $m("#list").prepend(html.li);
         }
 
         // 오른쪽 끝 컨텍스트버튼 이벤트 처리
@@ -129,7 +129,7 @@ define(["jquery"
 
     function onChildRemoved(data) {
         var key = data.key;
-        $("#" + key).remove();
+        $m("#" + key).remove();
         memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
         $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
     }
@@ -137,11 +137,11 @@ define(["jquery"
 
     function setHeader() {
         if (userInfo != null) {
-            $("#nickname").val(userInfo.data.nickname);
-            $("#fontSize").val(userInfo.data.fontSize.replace("px", ""));
-            $("#iconColor").val(userInfo.data.iconColor);
+            $m("#nickname").val(userInfo.data.nickname);
+            $m("#fontSize").val(userInfo.data.fontSize.replace("px", ""));
+            $m("#iconColor").val(userInfo.data.iconColor);
         } else {
-            $(".header .title").html("minimemo");
+            $m(".header .title").html("minimemo");
         }
     }
 
@@ -377,7 +377,7 @@ define(["jquery"
 
 
     mm.searchMemo = function () {
-        var txt = $("#input2").val().trim();
+        var txt = $m("#input2").val().trim();
 
         if (txt.length > 100) {
             alert("100자 이내로 입력 가능");
@@ -418,8 +418,8 @@ define(["jquery"
 
 
     mm.saveMemo = function () {
-        var key = $("#input").attr("key");
-        var txt = $("#input").val().trim();
+        var key = $m("#input").attr("key");
+        var txt = $m("#input").val().trim();
 
         if (txt.length > 3000) {
             alert("3000자 이내로 입력 가능");
@@ -430,7 +430,7 @@ define(["jquery"
             return;
         }
 
-        $(".dialog").css("display", "none");
+        $m(".dialog").css("display", "none");
 
         if (key == "") {// 저장
             firebase.database().ref("memos/" + userInfo.uid).push({
@@ -448,7 +448,7 @@ define(["jquery"
 
 
     mm.menuClick = function () {
-        if ($(".menu").css("left") == "0px") {
+        if ($m(".menu").css("left") == "0px") {
             $(".menu").animate({left: "-220px"}, 300);
         } else {
             $(".menu").animate({left: "0px"}, 300);
@@ -470,10 +470,10 @@ define(["jquery"
     mm.editMemo = function (key) {
         if (userInfo && userInfo.isConnected) {
             var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
-                $(".dialog").css("display", "block");
-                $("#input").val(snapshot.val().txt);
+                $m(".dialog").css("display", "block");
+                $m("#input").val(snapshot.val().txt);
                 $("#input").focus();
-                $("#input").attr("key", key);
+                $m("#input").attr("key", key);
             });
         } else {
             alert("로그인이 필요합니다");
@@ -483,13 +483,13 @@ define(["jquery"
 
     mm.writeMemo = function () {
         if (userInfo && userInfo.isConnected) {
-            if ($(".search").css("display") == "block") {
+            if ($m(".search").css("display") == "block") {
                 return;     // 글검색 상태인 경우에는 취소
             }
-            $(".dialog").css("display", "block");
-            $("#input").val("");
+            $m(".dialog").css("display", "block");
+            $m("#input").val("");
             $("#input").focus();
-            $("#input").attr("key", "");
+            $m("#input").attr("key", "");
         } else {
             if (confirm("로그인이 필요합니다"))
                 firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
@@ -499,11 +499,11 @@ define(["jquery"
 
     mm.searchClick = function () {
         if (userInfo && userInfo.isConnected) {
-            if ($(".dialog").css("display") == "block") {
+            if ($m(".dialog").css("display") == "block") {
                 return; // 글쓰기 상태라면 취소
             }
-            $(".search").css("display", "block");
-            $("#input2").val("");
+            $m(".search").css("display", "block");
+            $m("#input2").val("");
             $("#input2").focus();
         } else {
             alert("로그인이 필요합니다");
@@ -513,14 +513,14 @@ define(["jquery"
 
 
     mm.cancelSearch = function () {
-        $(".search").css("display", "none");
+        $m(".search").css("display", "none");
     };
 
 
     mm.keydownCheck = function (event) {
         var keycode = (event.which) ? event.which : event.keyCode;
         if ((event.metaKey || event.altKey) && keycode == 13) {
-            if ($(".dialog").css("display") == "block") {
+            if ($m(".dialog").css("display") == "block") {
                 mm.saveMemo();
             } else {
                 mm.searchMemo();

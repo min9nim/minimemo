@@ -206,26 +206,56 @@ define([],function(){
         },
 
         remove : function(){
-
+            this.doms.forEach(function(dom){
+                dom.parentNode.removeChild( dom );
+            });
         },
 
-        append : function(){
-
+        append : function(elem){
+            this.doms.forEach(function(dom){
+                if ( dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9 ) {
+                    dom.appendChild($m.clone(elem));
+                }
+            });
+            return this;
         },
 
-        prepend : function(){
-
+        prepend : function(elem){
+            this.doms.forEach(function(dom){
+                if ( dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9 ) {
+                    dom.insertBefore($m.clone(elem), dom.firstChild);
+                }
+            });
+            return this;
         },
 
         show : function(){
-
+            this.doms.forEach(function(dom){
+                dom.style.display = "";
+            });
+            return this;
         },
 
         hide : function(){
-
+            this.doms.forEach(function(dom){
+                dom.style.display = "none";
+            });
+            return this;
         },
 
-        val : function(){
+        val : function(value){
+            if(value === undefined){
+                return this.doms[0].value;
+            }
+
+            this.doms.forEach(function(dom){
+                dom.value = value;
+            });
+
+            return this;
+        },
+
+        focus : function(){
 
         }
 
@@ -233,7 +263,17 @@ define([],function(){
 
     $m.fn.init.prototype = $m.fn;
 
-
+    $m.clone = function(elem){
+        var newNode;
+        if(typeof elem === "string"){
+            var tmp = document.createElement("div");
+            tmp.innerHTML = elem;
+            newNode = tmp.firstChild;
+        }else{
+            newNode = elem.cloneNode(true);
+        }
+        return newNode;
+    };
 
     $m.qs = function(sel) {
         return document.querySelector(sel);
