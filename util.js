@@ -131,6 +131,7 @@ define([],function(){
         init :  function(sel){
             this.sel = sel;
             this.doms = document.querySelectorAll(sel);
+            this.length = this.doms.length;
         },
 
         html : function (html) {
@@ -146,20 +147,88 @@ define([],function(){
         },
 
         css : function(name, value) {
+            if(value === undefined){
+                return this.doms[0].style[name];
+            }
 
+            this.doms.forEach(function(dom){
+                dom.style[name] = value;
+            });
+
+            return this;
         },
 
         attr : function(name, value) {
+            if(value === undefined){
+                return this.doms[0].getAttribute(name);
+            }
+
+            this.doms.forEach(function(dom){
+                dom.setAttribute(name, value);
+            });
+
+            return this;
+        },
+
+        addClass : function(name) {
+            this.doms.forEach(function(dom){
+                var cls = dom.getAttribute("class");
+                //cls = cls.split(" ").push(name).join(" ");
+                cls = cls + " " + name;
+                dom.setAttribute("class", cls);
+            });
+
+            return this;
+        },
+
+
+        removeClass : function(name) {
+            this.doms.forEach(function(dom){
+                var cls = dom.getAttribute("class");
+                var arr = cls.split(" ");
+                var idx = arr.indexOf(name);
+                if(idx < 0){
+                    return;
+                }
+                arr.splice(idx, 1);
+                dom.setAttribute("class", arr.join(" "));
+            });
+
+            return this;
+        },
+
+        each : function(func) {
+            this.doms.forEach(function(dom){
+                func.call(dom);
+            });
+
+            return this;
+        },
+
+        remove : function(){
 
         },
 
-        addClass : function(name, value) {
+        append : function(){
 
         },
 
-        each : function() {
+        prepend : function(){
+
+        },
+
+        show : function(){
+
+        },
+
+        hide : function(){
+
+        },
+
+        val : function(){
 
         }
+
     };
 
     $m.fn.init.prototype = $m.fn;
@@ -173,6 +242,8 @@ define([],function(){
     $m.qsa = function(sel){
         return document.querySelectorAll(sel);
     };
+
+
 
     return $m;
 

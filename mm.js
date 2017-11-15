@@ -28,15 +28,15 @@ define(["jquery"
 
     // local function
     function showMemoList(uid) {
-        $(".state").text("");
-        $("#list").text("");
+        $m(".state").html("");
+        $m("#list").html("");
 
         memoRef.limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
             var memoObj = snapshot.val();
             Object.keys(memoObj).forEach(function (key) {
                 addItem(key, memoObj[key]);
             });
-            $(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+            $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
             $nprogress.done();
         });
     }
@@ -59,10 +59,10 @@ define(["jquery"
         //console.log(diff);
         if (diff < 1000) {// 방금 새로 등록한 글인 경우만
             addItem(data.key, data.val());
-            if ($(".state").html() === "") {
-                $(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+            if ($m(".state").html() === "") {
+                $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
             } else {
-                $(".header .title").html(memoList.length + " memos");
+                $m(".header .title").html(memoList.length + " memos");
             }
 
         }
@@ -119,7 +119,7 @@ define(["jquery"
         var key = data.key;
         var memoData = data.val();
         var html = getMemoHtml(key, memoData);
-        $("#" + key).html(html.liChild);
+        $m("#" + key).html(html.liChild);
         $("#" + key).animate({left: "0px"}, 300);
 
         // 오른쪽 끝 컨텍스트버튼 이벤트 처리
@@ -131,7 +131,7 @@ define(["jquery"
         var key = data.key;
         $("#" + key).remove();
         memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
-        $(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+        $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
     }
 
 
@@ -210,7 +210,7 @@ define(["jquery"
         var firstTxt = event.target.innerText;
         var memoRef = firebase.database().ref("memos/" + userInfo.uid);
         memoRef.once("value").then(function (snapshot) {
-            $("#list").html("");
+            $m("#list").html("");
             var reg = new RegExp(firstTxt, "i");
             var memoObj = snapshot.val();
             for (key in memoObj) {
@@ -219,8 +219,8 @@ define(["jquery"
                     addItem(key, memoObj[key]);
                 }
             }
-            $(".header .title").html(memoList.length + " memos");
-            $(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$("#list li").length} results`);
+            $m(".header .title").html(memoList.length + " memos");
+            $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$("#list li").length} results`);
             // 매칭단어 하이라이트닝
             $(".txt").each(function (i) {
                 this.innerHTML = this.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
@@ -279,7 +279,7 @@ define(["jquery"
             userInfo.isConnected = true;
         }
         $("#writeBtn").show();
-        $("#addBtn").html("쓰기");
+        $m("#addBtn").html("쓰기");
     }
 
     function conOff () {
@@ -290,7 +290,7 @@ define(["jquery"
         setTimeout(function () {// 20초 동안 연결이 끊어져 있는 경우라면
             if (userInfo.isConnected == false) {
                 $("#writeBtn").show();
-                $("#addBtn").html("로긴");
+                $m("#addBtn").html("로긴");
             }
         }, 20000);
         //alert("연결상태가 끊어졌습니다.");
@@ -306,26 +306,26 @@ define(["jquery"
     mm.setFontSize = function (size) {
         userInfo.data.fontSize = size + "px";
         firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-        $(".txt").css("font-size", userInfo.data.fontSize);
+        $m(".txt").css("font-size", userInfo.data.fontSize);
     };
 
     mm.setIconColor = function (color) {
         userInfo.data.iconColor = color;
         firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-        $("#list i.circle").each(function (i) {
+        $m("#list i.circle").each(function () {
             var bgcolor = $randomcolor({hue: color, luminosity: "dark"});
             $(this).css("background-color", bgcolor);
         });
     };
 
     mm.bodyScroll = function () {
-        if ($(".state").html() != "") {// 검색결과 일때
+        if ($m(".state").html() != "") {// 검색결과 일때
             return;
         }
 
         if (window.scrollY == $(document).height() - $(window).height()) {
             $nprogress.start();
-            $("#nprogress .spinner").css("top", "95%");
+            $m("#nprogress .spinner").css("top", "95%");
             var end = memoList.length - $("#list li").length;
             var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
             var nextList = memoList.slice(start, end).reverse();
