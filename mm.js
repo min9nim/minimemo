@@ -4,13 +4,15 @@ define(["jquery"
     , "shortcut"
     , "autolink"
     , "util"
+    , "partial"
     //, "materialize"       // 이거 없어도 렌더링에 문제가 없네?
 ], function ($
     , $nprogress
     , $randomcolor
     , $shortcut
     , $autolink       // undefined
-    , $util           // undefined
+    , $m           // undefined
+    , _
 ) {
 
     // export
@@ -205,7 +207,6 @@ define(["jquery"
         });
     }
 
-
     mm.searchFirstTxt = function () {
         var firstTxt = event.target.innerText;
         var memoRef = firebase.database().ref("memos/" + userInfo.uid);
@@ -213,12 +214,16 @@ define(["jquery"
             $m("#list").html("");
             var reg = new RegExp(firstTxt, "i");
             var memoObj = snapshot.val();
+
             for (key in memoObj) {
                 var res = reg.exec(memoObj[key].txt);
                 if (res !== null && res.index == 0) {
                     addItem(key, memoObj[key]);
                 }
             }
+
+
+
             $m(".header .title").html(memoList.length + " memos");
             $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$("#list li").length} results`);
             // 매칭단어 하이라이트닝
