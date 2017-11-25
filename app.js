@@ -24,9 +24,10 @@ requirejs.config({
     }
 });
 
-require(["mm", "util"], function(mm, $m){
+require(["mm", "util", "partial"], function(mm, $m, _){
     window.mm = mm;
     window.$m = $m;
+    window._ = _;
     //window.onload = mn.init;      // 모바일 사파리에서 실행시점이 안 맞을 때가 있는 거 같음..
     mm.init();
 });

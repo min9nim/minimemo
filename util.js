@@ -198,8 +198,8 @@ define([],function(){
         },
 
         each : function(func) {
-            this.doms.forEach(function(dom){
-                func.call(dom);
+            this.doms.forEach(function(val, key, arr){
+                func.call(val, val, key, arr);
             });
 
             return this;

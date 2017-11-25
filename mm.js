@@ -177,7 +177,7 @@ define(["jquery"
             diff_x = (e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX) - start_x;
             diff_y = (e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY) - start_y;
             if (Math.abs(diff_x) > Math.abs(diff_y * 4)) {
-                $(this).css("left", dom_start_x + diff_x);
+                $m(this).css("left", dom_start_x + diff_x);
             }
         }
 
@@ -215,20 +215,29 @@ define(["jquery"
             var reg = new RegExp(firstTxt, "i");
             var memoObj = snapshot.val();
 
-            for (key in memoObj) {
+
+            _.each(memoObj, function(val,key){
+                var res = reg.exec(val.txt);
+                if (res !== null && res.index == 0) {
+                    addItem(key, val);
+                }
+            });
+/*
+
+            for (var key in memoObj) {
                 var res = reg.exec(memoObj[key].txt);
                 if (res !== null && res.index == 0) {
                     addItem(key, memoObj[key]);
                 }
             }
-
+*/
 
 
             $m(".header .title").html(memoList.length + " memos");
             $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$("#list li").length} results`);
             // 매칭단어 하이라이트닝
-            $(".txt").each(function (i) {
-                this.innerHTML = this.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
+            $m(".txt").each(function (val, key, arr) {
+                val.innerHTML = val.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
             });
         });
     }
@@ -399,23 +408,37 @@ define(["jquery"
             $("#list").html("");
             var memoObj = snapshot.val();
             var txts = [];
-            for (key in memoObj) {
+
+
+            _.each(memoObj, function(val, key){
+                if (val.txt.indexOf(txt) >= 0) {
+                    addItem(key, val);
+                    txts.push(val.txt);
+                }
+            });
+
+            /*
+            for (var key in memoObj) {
                 if (memoObj[key].txt.indexOf(txt) >= 0) {
                     addItem(key, memoObj[key]);
                     txts.push(memoObj[key].txt);
                 }
             }
-            $(".header .title").html(memoList.length + " memos");
-            $(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$("#list li").length} results`);
+            */
+
+
+            $m(".header .title").html(memoList.length + " memos");
+            $m(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$("#list li").length} results`);
 
             // 매칭단어 하이라이트닝
             var reg = new RegExp(txt, "gi");
-            $(".txt").each(function (i, dom) {
-                var oriTxt = txts[txts.length-1-i];
-                oriTxt = oriTxt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
+            $m(".txt").each(function (val, key, arr) {
+                var oriTxt = txts[txts.length-1-key];
+                val.innerHTML = oriTxt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
                                 .replace(/\n/gi, "<br/>")  // 새줄표시
-                                .replace(/[\s]dd/gi, "&nbsp;");  // 공백표시
-                this.innerHTML = oriTxt.replace(reg, `<span style="background-color:yellow;">${txt}</span>`); //검색할 때 링크는 제공하지 않음; 처리 어려움;;
+                                .replace(/[\s]dd/gi, "&nbsp;")  // 공백표시
+                                .replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // 매칭단어 하이라이트
+                                // url주소 링크 처리 필요;
             });
 
         });
