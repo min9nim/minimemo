@@ -234,7 +234,7 @@ define(["jquery"
 
 
             $m(".header .title").html(memoList.length + " memos");
-            $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$("#list li").length} results`);
+            $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$m("#list li").length} results`);
             // 매칭단어 하이라이트닝
             $m(".txt").each(function (val, key, arr) {
                 val.innerHTML = val.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
@@ -256,7 +256,7 @@ define(["jquery"
         firebase.auth().onAuthStateChanged(function (user) {
             if (user) {// 인증완료
                 userInfo = user;
-                $("#writeBtn").show();
+                $m("#writeBtn").show();
                 var userRef = firebase.database().ref("users/" + userInfo.uid);
                 userRef.once('value').then(function (snapshot) {
                     if (snapshot.val() != null) {
@@ -292,7 +292,7 @@ define(["jquery"
         if (userInfo != null){
             userInfo.isConnected = true;
         }
-        $("#writeBtn").show();
+        $m("#writeBtn").show();
         $m("#addBtn").html("쓰기");
     }
 
@@ -300,10 +300,10 @@ define(["jquery"
         if (userInfo != null){
             userInfo.isConnected = false;
         }
-        $("#writeBtn").hide();
+        $m("#writeBtn").hide();
         setTimeout(function () {// 20초 동안 연결이 끊어져 있는 경우라면
             if (userInfo.isConnected == false) {
-                $("#writeBtn").show();
+                $m("#writeBtn").show();
                 $m("#addBtn").html("로긴");
             }
         }, 20000);
@@ -313,7 +313,7 @@ define(["jquery"
     mm.setNickname = function (nickname) {
         userInfo.data.nickname = nickname;
         firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-        $(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+        $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
     };
 
 
@@ -326,9 +326,9 @@ define(["jquery"
     mm.setIconColor = function (color) {
         userInfo.data.iconColor = color;
         firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-        $m("#list i.circle").each(function () {
+        $m("#list i.circle").each(function (val, key, arr) {
             var bgcolor = $randomcolor({hue: color, luminosity: "dark"});
-            $(this).css("background-color", bgcolor);
+            $m(val).css("background-color", bgcolor);
         });
     };
 
@@ -340,7 +340,7 @@ define(["jquery"
         if (window.scrollY == $(document).height() - $(window).height()) {
             $nprogress.start();
             $m("#nprogress .spinner").css("top", "95%");
-            var end = memoList.length - $("#list li").length;
+            var end = memoList.length - $m("#list li").length;
             var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
             var nextList = memoList.slice(start, end).reverse();
             nextList.forEach(function (x, i) {
@@ -386,7 +386,7 @@ define(["jquery"
 
 
     mm.cancelWrite = function () {
-        $(".dialog").css("display", "none");
+        $m(".dialog").css("display", "none");
     };
 
 
@@ -402,10 +402,10 @@ define(["jquery"
             return;
         }
 
-        $(".search").css("display", "none");
+        $m(".search").css("display", "none");
 
         memoRef.once("value").then(function (snapshot) {
-            $("#list").html("");
+            $m("#list").html("");
             var memoObj = snapshot.val();
             var txts = [];
 
@@ -428,7 +428,7 @@ define(["jquery"
 
 
             $m(".header .title").html(memoList.length + " memos");
-            $m(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$("#list li").length} results`);
+            $m(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$m("#list li").length} results`);
 
             // 매칭단어 하이라이트닝
             var reg = new RegExp(txt, "gi");
@@ -488,7 +488,6 @@ define(["jquery"
         if (userInfo && userInfo.isConnected) {
             if (confirm("삭제하시겠습니까?")) {
                 firebase.database().ref("memos/" + userInfo.uid + "/" + key).remove();
-                //$("#" + key).remove();
             }
         } else {
             alert("로그인이 필요합니다");
@@ -500,7 +499,7 @@ define(["jquery"
             var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
                 $m(".dialog").css("display", "block");
                 $m("#input").val(snapshot.val().txt);
-                $("#input").focus();
+                $m("#input").focus();
                 $m("#input").attr("key", key);
             });
         } else {
@@ -516,7 +515,7 @@ define(["jquery"
             }
             $m(".dialog").css("display", "block");
             $m("#input").val("");
-            $("#input").focus();
+            $m("#input").focus();
             $m("#input").attr("key", "");
         } else {
             if (confirm("로그인이 필요합니다"))
@@ -532,7 +531,7 @@ define(["jquery"
             }
             $m(".search").css("display", "block");
             $m("#input2").val("");
-            $("#input2").focus();
+            $m("#input2").focus();
         } else {
             alert("로그인이 필요합니다");
             //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());

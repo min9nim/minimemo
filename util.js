@@ -129,9 +129,14 @@ define([],function(){
 
     $m.fn = {
         init :  function(sel){
-            this.sel = sel;
-            this.doms = document.querySelectorAll(sel);
-            this.length = this.doms.length;
+            if(typeof sel == "string"){
+                this.sel = sel;
+                this.doms = document.querySelectorAll(sel);
+                this.length = this.doms.length;
+            }else{// dom이 직접 들어올 경우
+                this.doms = [sel];
+                this.length = 1;
+            }
         },
 
         html : function (html) {
@@ -256,7 +261,7 @@ define([],function(){
         },
 
         focus : function(){
-
+            this.doms[0].focus();
         }
 
     };
