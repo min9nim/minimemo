@@ -449,8 +449,8 @@ define(["jquery"
         var key = $m("#input").attr("key");
         var txt = $m("#input").val().trim();
 
-        if (txt.length > 3000) {
-            alert("3000자 이내로 입력 가능");
+        if (txt.length > 60000) {
+            alert("60000자 이내로 입력 가능");
             return;
         }
         if (txt === "") {

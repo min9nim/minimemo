@@ -175,6 +175,17 @@ define([],function(){
             return this;
         },
 
+
+        removeAttr : function(name) {
+            if(this.length == 0) return;
+
+            this.doms.forEach(function(dom){
+                dom.removeAttribute(name);
+            });
+
+            return this;
+        },
+
         addClass : function(name) {
             this.doms.forEach(function(dom){
                 var cls = dom.getAttribute("class");
