@@ -1,3 +1,5 @@
+timelog("mm.js 시작  ");
+
 define(["jquery"
     , "nprogress"
     , "randomColor"
@@ -14,6 +16,8 @@ define(["jquery"
     , $m           // undefined
     , _
 ) {
+
+    timelog("mm.js 외부모듈 로드 완료");
 
     // export
     var mm = {};
@@ -33,27 +37,31 @@ define(["jquery"
         $m(".state").html("");
         $m("#list").html("");
 
-        memoRef.limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
+        timelog("최근 50개 로드 전 ");
+        firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
+            timelog("최근 50개 로드 후 ");
+
             var memoObj = snapshot.val();
             Object.keys(memoObj).forEach(function (key) {
                 addItem(key, memoObj[key]);
             });
+        });
+    }
+
+    function initMemoList(uid) {
+        memoRef = firebase.database().ref("memos/" + uid);
+        memoRef.on("child_added", onChildAdded);
+        memoRef.on("child_changed", onChildChanged);
+        memoRef.on("child_removed", onChildRemoved);
+        memoRef.once('value', function(snapshot) {
+            timelog("전체메모 조회");
             $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
             $nprogress.done();
         });
     }
 
-    function initMemoList(uid) {
-        //var memoRef = firebase.database().ref("memos/" + uid).limitToLast(100);
-        memoRef = firebase.database().ref("memos/" + uid);
-        memoRef.on("child_added", onChildAdded);
-        memoRef.on("child_changed", onChildChanged);
-        memoRef.on("child_removed", onChildRemoved);
-        showMemoList(uid);
-    }
-
     function onChildAdded(data) {
-        //console.log("## onChildAdded called");
+        //console.log("## onChildAdded called : " + memoList.length);
         memoList.push(data);
         var curDate = Date.now();
         var createDate = data.val().createDate;
@@ -66,7 +74,6 @@ define(["jquery"
             } else {
                 $m(".header .title").html(memoList.length + " memos");
             }
-
         }
     }
 
@@ -103,11 +110,11 @@ define(["jquery"
             editBtn = `<i id="btn_edit" onclick='mm.editMemo("${key}")' class="material-icons">edit</i>`;
         }
 
-        var color = $randomcolor({hue: userInfo.data.iconColor, luminosity: "dark"});  // https://randomcolor.llllll.li/
+        var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "green", luminosity: "dark"});  // https://randomcolor.llllll.li/
 
         var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="mm.searchFirstTxt()">${firstTxt}</i>
                 <p><i class="createDate">${createDate}</i><i class="btnContext"><<</i>
-                <div class="txt" style="font-size:${userInfo.data.fontSize};">${txt}</div></p>${removeBtn}${editBtn}`;
+                <div class="txt" style="font-size:${userInfo.data ? userInfo.data.fontSize : "18px"};">${txt}</div></p>${removeBtn}${editBtn}`;
 
         var li = `<li id="${key}" class="collection-item avatar">${liChild}</li>`;
         var html = {};
@@ -195,7 +202,7 @@ define(["jquery"
     }
 
 
-    function signout() {
+    mm.signout = function () {
         firebase.auth().signOut().then(function () {
             //userInfo = null;
             //$("#list").html("");
@@ -209,12 +216,10 @@ define(["jquery"
 
     mm.searchFirstTxt = function () {
         var firstTxt = event.target.innerText;
-        var memoRef = firebase.database().ref("memos/" + userInfo.uid);
         memoRef.once("value").then(function (snapshot) {
             $m("#list").html("");
             var reg = new RegExp(firstTxt, "i");
             var memoObj = snapshot.val();
-
 
             _.each(memoObj, function(val,key){
                 var res = reg.exec(val.txt);
@@ -231,7 +236,6 @@ define(["jquery"
                 }
             }
 */
-
 
             $m(".header .title").html(memoList.length + " memos");
             $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$m("#list li").length} results`);
@@ -253,16 +257,30 @@ define(["jquery"
     }
 
     function login(){
+        timelog("로그인 전");
         firebase.auth().onAuthStateChanged(function (user) {
+
+            timelog("로그인 후");
+
             if (user) {// 인증완료
-                userInfo = user;
+                mm.userInfo = userInfo = user;
+                showMemoList(userInfo.uid);
                 $m("#writeBtn").show();
+
                 var userRef = firebase.database().ref("users/" + userInfo.uid);
                 userRef.once('value').then(function (snapshot) {
+                    timelog("사용자 정보 로드 완료");
                     if (snapshot.val() != null) {
                         userInfo.data = snapshot.val();
                         setHeader();
-                        initMemoList(userInfo.uid);
+                        $m("#list li .circle").each(function(val, key, arr){
+                            var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "all", luminosity: "dark"});  // https://randomcolor.llllll.li/
+                            $m(val).css("background-color", color);
+                        });
+                        $m("#list li .txt").each(function(val, key, arr){
+                            $m(val).css("font-size", userInfo.data.fontSize);
+                        });
+
                     } else {// 신규 로그인 경우
                         var userData = {
                             fontSize: "18px",
@@ -273,9 +291,9 @@ define(["jquery"
                         userRef.set(userData, function () {
                             userInfo.data = userData;
                             setHeader();
-                            initMemoList(userInfo.uid);
                         });
                     }
+                    initMemoList(userInfo.uid);
                 });
             } else {
                 userInfo = null;
@@ -365,9 +383,7 @@ define(["jquery"
 
     mm.init = function () {
         $nprogress.start();  // https://github.com/rstacruz/nprogress
-
         login();
-
         setShortcut();
 
         firebase.database().ref(".info/connected").on("value", function (snap) {
@@ -409,7 +425,6 @@ define(["jquery"
             var memoObj = snapshot.val();
             var txts = [];
 
-
             _.each(memoObj, function(val, key){
                 if (val.txt.indexOf(txt) >= 0) {
                     addItem(key, val);
@@ -425,7 +440,6 @@ define(["jquery"
                 }
             }
             */
-
 
             $m(".header .title").html(memoList.length + " memos");
             $m(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$m("#list li").length} results`);
@@ -495,7 +509,7 @@ define(["jquery"
 
     mm.editMemo = function (key) {
         if (userInfo && userInfo.isConnected) {
-            var memoRef = firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
+            firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
                 $m(".dialog").css("display", "block");
                 $m("#input").val(snapshot.val().txt);
                 $m("#input").focus();

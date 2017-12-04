@@ -300,8 +300,6 @@ define([],function(){
     };
 
 
-
     return $m;
-
 });
 

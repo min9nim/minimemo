@@ -24,6 +24,8 @@ requirejs.config({
     }
 });
 
+timelog("firebase & requirejs 로드 후: ");
+
 require(["mm", "util", "partial"], function(mm, $m, _){
     window.mm = mm;
     window.$m = $m;

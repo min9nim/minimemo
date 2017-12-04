@@ -13,6 +13,21 @@
     <link rel="stylesheet" href="style.css?v=2">
 
     <title>miniMemo project :)</title>
+    <script>
+       var  timelog = (function() {
+           var arr = [];
+           return function(msg){
+               arr.push({"msg" : msg, "time" : Date.now()});
+               if(arr.length === 1){
+                   console.log("## " + msg + " : 0");
+               }else{
+                   console.log("## " + msg + " : " + (arr[arr.length-1].time -  arr[arr.length-2].time));
+               }
+           }
+       })();
+
+       timelog("시작~");
+    </script>
 
     <script type="text/javascript" src="ext/firebase.js"></script>
     <script type="text/javascript" data-main="app" src="ext/require.js"></script>
