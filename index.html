@@ -16,7 +16,6 @@
     <script>
        var  timelog = (function() {
            var arr = [];
-           var timer;
            return function(msg){
                arr.push({"msg" : msg, "time" : Date.now()});
                if(arr.length === 1){
@@ -24,12 +23,12 @@
                }else{
                    console.log("## " + msg + " : " + (arr[arr.length-1].time -  arr[arr.length-2].time));
                }
-               timer = setTimeout(function(){
-                   if(Date.now() - arr[arr.length-1].time >= 3000){
+               setTimeout(function(){
+                   if(Date.now() - arr[arr.length-1].time >= 5000){
                        console.log("*** 전체 소요시간 : " + (arr[arr.length-1].time -  arr[0].time) + " ***");
                        delete timelog;      // 여기서 왜 해당 변수 삭제가 안될까??
                    }
-               }, 3000);
+               }, 5000);
 
            }
        })();

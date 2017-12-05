@@ -112,7 +112,7 @@ define(["jquery"
 
         var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "green", luminosity: "dark"});  // https://randomcolor.llllll.li/
 
-        var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="mm.searchFirstTxt()">${firstTxt}</i>
+        var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="mm.searchFirstTxt(this)">${firstTxt}</i>
                 <p><i class="createDate">${createDate}</i><i class="btnContext"><<</i>
                 <div class="txt" style="font-size:${userInfo.data ? userInfo.data.fontSize : "18px"};">${txt}</div></p>${removeBtn}${editBtn}`;
 
@@ -214,8 +214,9 @@ define(["jquery"
         });
     }
 
-    mm.searchFirstTxt = function () {
-        var firstTxt = event.target.innerText;
+    mm.searchFirstTxt = function (obj) {
+        //var firstTxt = event.target.innerText;
+        var firstTxt = obj.innerText;
         memoRef.once("value").then(function (snapshot) {
             $m("#list").html("");
             var reg = new RegExp(firstTxt, "i");
