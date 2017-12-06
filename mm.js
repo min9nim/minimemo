@@ -449,11 +449,27 @@ define(["jquery"
             var reg = new RegExp(txt, "gi");
             $m(".txt").each(function (val, key, arr) {
                 var oriTxt = txts[txts.length-1-key];
+
+                val.innerHTML = oriTxt.split("\n").map(function(val){
+                    newval = val.replace(/>/gi, "&gt;")  // XSS 방어코드
+                                    .replace(/[\s]/gi, "&nbsp;")  // 공백표시
+                                    .replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // 매칭단어 하이라이트
+
+                    if(val.indexOf("http") == 0){
+                        return `<a href="${val}" target="_blank" >${newval}</a>`;
+                    }else{
+                        return newval;
+                    }
+                }).join("<br/>");
+
+                /*
                 val.innerHTML = oriTxt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
                                 .replace(/\n/gi, "<br/>")  // 새줄표시
                                 .replace(/[\s]/gi, "&nbsp;")  // 공백표시
                                 .replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // 매칭단어 하이라이트
                                 // url주소 링크 처리 필요;
+              */
+
             });
         });
     };

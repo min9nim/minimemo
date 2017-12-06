@@ -299,6 +299,12 @@ define([],function(){
         return document.querySelectorAll(sel);
     };
 
+    $m._split = function(str, del){
+        return String.prototype.split.call(str, del);
+    };
+
+
+
 
     return $m;
 });
