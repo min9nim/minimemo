@@ -4,7 +4,6 @@ define(["jquery"
     , "nprogress"
     , "randomColor"
     , "shortcut"
-    , "autolink"
     , "util"
     , "partial"
     //, "materialize"       // 이거 없어도 렌더링에 문제가 없네?
@@ -12,7 +11,6 @@ define(["jquery"
     , $nprogress
     , $randomcolor
     , $shortcut
-    , $autolink       // undefined
     , $m           // undefined
     , _
 ) {
