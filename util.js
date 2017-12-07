@@ -156,12 +156,29 @@ define([],function(){
                 return this.doms[0].style[name];
             }
 
+            if(typeof value === "number"){
+                value = value + "px";
+            }
+
             this.doms.forEach(function(dom){
                 dom.style[name] = value;
             });
 
             return this;
         },
+
+
+        position : function() {
+            var top = this.doms[0].style["top"];
+            top = Number(top.substring(0, top.length-2));
+
+            var left = this.doms[0].style["left"];
+            left = Number(left.substring(0, left.length-2));
+
+            return {"top" : top, "left" : left};
+        },
+
+
 
         attr : function(name, value) {
             if(value === undefined){

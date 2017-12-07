@@ -198,7 +198,7 @@ define(["jquery"
         function touchstart(e) {
             start_x = e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX;
             start_y = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
-            dom_start_x = $(this).position().left;  // 터치시작할 때 최초 dom요소의 x위치를 기억하고 있어야 함
+            dom_start_x = $m(this).position().left;  // 터치시작할 때 최초 dom요소의 x위치를 기억하고 있어야 함
         }
 
         function touchmove(e) {
@@ -577,7 +577,6 @@ define(["jquery"
             return false;
         }
     };
-
 
     return mm;
 });
