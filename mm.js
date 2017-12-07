@@ -1,4 +1,4 @@
-timelog("mm.js 시작  ");
+//timelog("mm.js 시작  ");
 
 define(["jquery"
     , "nprogress"
@@ -15,7 +15,7 @@ define(["jquery"
     , _
 ) {
 
-    timelog("mm.js 외부모듈 로드 완료");
+    //timelog("mm.js 외부모듈 로드 완료");
 
     // export
     var mm = {};
@@ -39,20 +39,20 @@ define(["jquery"
         firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
             timelog("최근 50개 로드 후 ");
 
-            var memoObj = snapshot.val();
-            Object.keys(memoObj).forEach(function (key) {
-                addItem(key, memoObj[key]);
+            $m._each(snapshot.val(), function(val, key){
+                addItem(key, val);
             });
         });
     }
 
     function initMemoList(uid) {
+        //timelog("전체메모 조회 전");
         memoRef = firebase.database().ref("memos/" + uid);
         memoRef.on("child_added", onChildAdded);
         memoRef.on("child_changed", onChildChanged);
         memoRef.on("child_removed", onChildRemoved);
         memoRef.once('value', function(snapshot) {
-            timelog("전체메모 조회");
+            //timelog("전체메모 조회 후");
             $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
             $nprogress.done();
         });
@@ -154,7 +154,8 @@ define(["jquery"
 
         // 오른쪽 끝 컨텍스트버튼 이벤트 처리
         setContextBtnEvent($("#" + key + " .btnContext"));
-        window.scrollTo("", document.getElementById(key).offsetTop + document.getElementById("list").offsetTop);
+        //window.scrollTo("", $m("#"+key).dom.offsetTop + $m("#list").dom.offsetTop);   // .dialog 의 top를 미리 옮겨놓았기 때문에 불필요
+
     }
 
     function onChildRemoved(data) {
@@ -279,19 +280,18 @@ define(["jquery"
     }
 
     function login(){
-        timelog("로그인 전");
+        //timelog("로그인 전");
         firebase.auth().onAuthStateChanged(function (user) {
-
-            timelog("로그인 후");
-
+            //timelog("로그인 후");
             if (user) {// 인증완료
                 mm.userInfo = userInfo = user;
                 showMemoList(userInfo.uid);
                 $m("#writeBtn").show();
 
+                //timelog("사용자 정보 로드 전");
                 var userRef = firebase.database().ref("users/" + userInfo.uid);
                 userRef.once('value').then(function (snapshot) {
-                    timelog("사용자 정보 로드 완료");
+                    //timelog("사용자 정보 로드 후");
                     if (snapshot.val() != null) {
                         userInfo.data = snapshot.val();
                         setHeader();
@@ -444,10 +444,9 @@ define(["jquery"
 
         memoRef.once("value").then(function (snapshot) {
             $m("#list").html("");
-            var memoObj = snapshot.val();
             var txts = [];
 
-            _.each(memoObj, function(val, key){
+            $m._each(snapshot.val(), function(val, key){
                 if (val.txt.indexOf(word) >= 0) {
                     addItem(key, val);
                     txts.push(val.txt);
@@ -459,7 +458,7 @@ define(["jquery"
 
             $m(".txt").each(function (val, key, arr) {
                 var oriTxt = txts[txts.length-1-key];
-                val.innerHTML = _format_str(oriTxt, word);
+                $m(val).html(_format_str(oriTxt, word));
             });
         });
     };
@@ -518,6 +517,7 @@ define(["jquery"
         if (userInfo && userInfo.isConnected) {
             firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
                 $m(".dialog").css("display", "block");
+                $m(".dialog").css("top", window.scrollY);
                 $m("#input").val(snapshot.val().txt);
                 $m("#input").focus();
                 $m("#input").attr("key", key);

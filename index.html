@@ -25,7 +25,7 @@
                }
                setTimeout(function(){
                    if(Date.now() - arr[arr.length-1].time >= 5000){
-                       console.log("*** 전체 소요시간 : " + (arr[arr.length-1].time -  arr[0].time) + " ***");
+                       //console.log("*** 전체 소요시간 : " + (arr[arr.length-1].time -  arr[0].time) + " ***");
                        delete timelog;      // 여기서 왜 해당 변수 삭제가 안될까??
                    }
                }, 5000);
@@ -33,10 +33,10 @@
            }
        })();
 
-       timelog("시작~");
+       //timelog("시작~");
     </script>
     <script type="text/javascript" src="ext/firebase.js"></script>
-    <script>timelog("firebase 로드 완료");</script>
+    <script>//timelog("firebase 로드 완료");</script>
     <script type="text/javascript" data-main="app" src="ext/require.js"></script>
 </head>
 

@@ -104,7 +104,6 @@ function HashTable(obj)
         return arr;
     }
 
-
     this.each = function(fn) {
         for (var k in this.items) {
             if (this.hasItem(k)) {
@@ -112,7 +111,6 @@ function HashTable(obj)
             }
         }
     }
-
 
     this.clear = function()
     {
@@ -137,9 +135,14 @@ define([],function(){
                 this.doms = [sel];
                 this.length = 1;
             }
+            if(this.length === 1){
+                this.dom = this.doms[0];
+            }
         },
 
         html : function (html) {
+            if(this.length == 0) return;
+
             if(html === undefined){
                 return this.doms[0].innerHTML;
             }
@@ -152,12 +155,17 @@ define([],function(){
         },
 
         css : function(name, value) {
+            if(this.length == 0) return;
+
             if(value === undefined){
                 return this.doms[0].style[name];
             }
 
             if(typeof value === "number"){
-                value = value + "px";
+                var arr = ["left", "top", "right", "bottom", "width", "height"];
+                if(arr.indexOf(name) >= 0){
+                    value = value + "px";
+                }
             }
 
             this.doms.forEach(function(dom){
@@ -169,6 +177,8 @@ define([],function(){
 
 
         position : function() {
+            if(this.length == 0) return;
+
             var top = this.doms[0].style["top"];
             top = Number(top.substring(0, top.length-2));
 
@@ -181,6 +191,8 @@ define([],function(){
 
 
         attr : function(name, value) {
+            if(this.length == 0) return;
+
             if(value === undefined){
                 return this.doms[0].getAttribute(name);
             }
@@ -264,7 +276,7 @@ define([],function(){
 
         show : function(){
             this.doms.forEach(function(dom){
-                dom.style.display = "";
+                dom.style.display = "block";
             });
             return this;
         },
@@ -277,6 +289,8 @@ define([],function(){
         },
 
         val : function(value){
+            if(this.length == 0) return;
+
             if(value === undefined){
                 return this.doms[0].value;
             }
@@ -289,6 +303,8 @@ define([],function(){
         },
 
         focus : function(){
+            if(this.length == 0) return;
+
             this.doms[0].focus();
         }
 
@@ -307,6 +323,7 @@ define([],function(){
         }
         return newNode;
     };
+/*
 
     $m.qs = function(sel) {
         return document.querySelector(sel);
@@ -315,7 +332,17 @@ define([],function(){
     $m.qsa = function(sel){
         return document.querySelectorAll(sel);
     };
+*/
 
+
+    // 유틸
+    $m.scrollTo = function(x, y){
+        window.scrollTo(x,y);
+    };
+
+
+
+    // 함수형 프로그래밍 라이브러리
     $m._curry = function(fn){
         return function(a,b){
             return arguments.length === 2 ? fn(a,b) : b => fn(a,b);
@@ -327,7 +354,6 @@ define([],function(){
             return arguments.length === 2 ? fn(a,b) : b => fn(b,a);
         }
     };
-
 
     $m._each = $m._curryr(function(list, fn) {
         if(typeof list !==  "object" || !list){
@@ -358,7 +384,6 @@ define([],function(){
         return res;
     });
 
-
     $m._reduce = function(list, iter, init){
         var res = init;
         if(init === undefined){
@@ -371,8 +396,32 @@ define([],function(){
         return res;
     };
 
+    $m._slice = function(list, begin, end){
+        if(typeof arguments[0] === "number"){
+            var begin = arguments[0];
+            var end = arguments[1];
+            return function(list){
+                return Array.prototype.slice.call(list, begin, end);
+            };
+        }else{
+            return Array.prototype.slice.call(list, begin, end);
+        }
+    };
 
+    $m._go = function () {
+        var args = arguments;
+        var fns = $m._slice(args, 1);
+        return $m._pipe(fns)(args[0]);
+    };
 
+    $m._pipe = function () {
+        var fns = Array.isArray(arguments[0]) ? arguments[0] : arguments;
+        return function(){
+            return $m._reduce(fns, function(val, res, key, list){
+                return val(res);
+            }, arguments[0]);
+        }
+    };
 
 
 

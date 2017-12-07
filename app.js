@@ -1,4 +1,4 @@
-timelog("requirejs 로드 완료 ");
+//timelog("requirejs 로드 완료 ");
 
 // Initialize Firebase
 var config = {
@@ -28,7 +28,7 @@ requirejs.config({
 
 
 require(["mm", "util", "partial"], function(mm, $m, _){
-    timelog("mm, util, partial 로드 완료 ");
+    //timelog("mm, util, partial 로드 완료 ");
     window.mm = mm;
     window.$m = $m;
     window._ = _;
