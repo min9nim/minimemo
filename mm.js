@@ -91,16 +91,39 @@ define(["jquery"
         setTouchSlider($("#" + key));
     }
 
+    function _format_str(str, word){
+        if(word){
+            var reg = new RegExp(word, "gi");
+        }
+        return str.split("\n").map(function(val){
+            return val.split(" ").map(function(val){
+                var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
+                if(word){ // 매칭단어 하이라이트
+                    newval = newval.replace(reg, `<span style="background-color:yellow;">${word}</span>`);
+                }
+                if(val.indexOf("http") === 0){
+                    return `<a href="${val}" target="_blank">${newval}</a>`;
+                }else{
+                    return newval;
+                }
+            }).join("&nbsp;");   // 공백문자 &nbsp; 치환
+        }).join("<br/>");   // 새줄문자 <br/> 치환
+    }
 
     function getMemoHtml(key, memoData) {
         var txt = memoData.txt;
         var createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
         var firstTxt = txt.substr(0, 1).toUpperCase();
+/*
 
         txt = txt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
                 .replace(/\n/gi, "<br/>")  // 새줄표시
-                .replace(/[\s]/gi, "&nbsp;")  // 공백표시
+                .replace(/[\s]/gi, "&nbsp;") // 공백표시
                 .autoLink({target: "_blank"});
+
+*/
+
+        txt = _format_str(txt);
 
         //console.log("txt = " + txt + ", firstTxt = " + firstTxt);
         var removeBtn = "";
@@ -408,13 +431,13 @@ define(["jquery"
 
 
     mm.searchMemo = function () {
-        var txt = $m("#input2").val().trim();
+        var word = $m("#input2").val().trim();
 
-        if (txt.length > 100) {
+        if (word.length > 100) {
             alert("100자 이내로 입력 가능");
             return;
         }
-        if (txt === "") {
+        if (word === "") {
             alert("내용을 입력해 주세요");
             return;
         }
@@ -427,49 +450,18 @@ define(["jquery"
             var txts = [];
 
             _.each(memoObj, function(val, key){
-                if (val.txt.indexOf(txt) >= 0) {
+                if (val.txt.indexOf(word) >= 0) {
                     addItem(key, val);
                     txts.push(val.txt);
                 }
             });
 
-            /*
-            for (var key in memoObj) {
-                if (memoObj[key].txt.indexOf(txt) >= 0) {
-                    addItem(key, memoObj[key]);
-                    txts.push(memoObj[key].txt);
-                }
-            }
-            */
-
             $m(".header .title").html(memoList.length + " memos");
-            $m(".header .state").html(`> <span style="font-style:italic;">${txt}</span> 's ${$m("#list li").length} results`);
+            $m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
 
-            // 매칭단어 하이라이트닝
-            var reg = new RegExp(txt, "gi");
             $m(".txt").each(function (val, key, arr) {
                 var oriTxt = txts[txts.length-1-key];
-
-                val.innerHTML = oriTxt.split("\n").map(function(val){
-                    newval = val.replace(/>/gi, "&gt;")  // XSS 방어코드
-                                    .replace(/[\s]/gi, "&nbsp;")  // 공백표시
-                                    .replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // 매칭단어 하이라이트
-
-                    if(val.indexOf("http") == 0){
-                        return `<a href="${val}" target="_blank" >${newval}</a>`;
-                    }else{
-                        return newval;
-                    }
-                }).join("<br/>");
-
-                /*
-                val.innerHTML = oriTxt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
-                                .replace(/\n/gi, "<br/>")  // 새줄표시
-                                .replace(/[\s]/gi, "&nbsp;")  // 공백표시
-                                .replace(reg, `<span style="background-color:yellow;">${txt}</span>`); // 매칭단어 하이라이트
-                                // url주소 링크 처리 필요;
-              */
-
+                val.innerHTML = _format_str(oriTxt, word);
             });
         });
     };
