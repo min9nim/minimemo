@@ -299,9 +299,64 @@ define([],function(){
         return document.querySelectorAll(sel);
     };
 
-    $m._split = function(str, del){
-        return String.prototype.split.call(str, del);
+    $m._curry = function(fn){
+        return function(a,b){
+            return arguments.length === 2 ? fn(a,b) : b => fn(a,b);
+        }
     };
+
+    $m._curryr = function(fn){
+        return function(a,b){
+            return arguments.length === 2 ? fn(a,b) : b => fn(b,a);
+        }
+    };
+
+
+    $m._each = $m._curryr(function(list, fn) {
+        if(typeof list !==  "object" || !list){
+            return [];
+        }
+        var keys = Object.keys(list);
+        for(var i=0; i<keys.length; i++){
+            fn(list[keys[i]], keys[i], list);
+        }
+        return list;
+    });
+
+    $m._map = $m._curryr(function(list, mapper){
+        var res = [];
+        $m._each(list, function(val, key, list){
+            res.push(mapper(val, key, list));
+        });
+        return res;
+    });
+
+    $m._filter = $m._curryr(function(list, predi){
+        var res = [];
+        $m._each(list, function(val, key, list){
+            if(predi(val, key, list)){
+                res.push(val);
+            }
+        });
+        return res;
+    });
+
+
+    $m._reduce = function(list, iter, init){
+        var res = init;
+        if(init === undefined){
+            res = list && list[0];      // null 체크
+            list = list && list.slice(1);
+        }
+        $m._each(list, function(val, key, list){
+                res = iter(val, res, key, list);
+        });
+        return res;
+    };
+
+
+
+
 
 
     return $m;

@@ -243,7 +243,7 @@ define(["jquery"
             var reg = new RegExp(firstTxt, "i");
             var memoObj = snapshot.val();
 
-            _.each(memoObj, function(val,key){
+            $m._each(memoObj, function(val,key,list){
                 var res = reg.exec(val.txt);
                 if (res !== null && res.index == 0) {
                     addItem(key, val);
