@@ -89,15 +89,15 @@ define(["jquery"
         setTouchSlider($("#" + key));
     }
 
-    function _format_str(str, word){
+    function _br_nbsp_link(str, word){
         if(word){
-            var reg = new RegExp(word, "gi");
+            var reg = new RegExp("("+word+")", "gi");
         }
         return str.split("\n").map(function(val){
             return val.split(" ").map(function(val){
                 var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
                 if(word){ // 매칭단어 하이라이트
-                    newval = newval.replace(reg, `<span style="background-color:yellow;">${word}</span>`);
+                    newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
                 }
                 if(val.indexOf("http") === 0){
                     return `<a href="${val}" target="_blank">${newval}</a>`;
@@ -121,7 +121,7 @@ define(["jquery"
 
 */
 
-        txt = _format_str(txt);
+        txt = _br_nbsp_link(txt);
 
         //console.log("txt = " + txt + ", firstTxt = " + firstTxt);
         var removeBtn = "";
@@ -447,7 +447,7 @@ define(["jquery"
             var txts = [];
 
             $m._each(snapshot.val(), function(val, key){
-                if (val.txt.indexOf(word) >= 0) {
+                if (val.txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
                     addItem(key, val);
                     txts.push(val.txt);
                 }
@@ -458,7 +458,7 @@ define(["jquery"
 
             $m(".txt").each(function (val, key, arr) {
                 var oriTxt = txts[txts.length-1-key];
-                $m(val).html(_format_str(oriTxt, word));
+                $m(val).html(_br_nbsp_link(oriTxt, word));
             });
         });
     };
