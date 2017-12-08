@@ -154,6 +154,20 @@ define([],function(){
             return this;
         },
 
+        text : function (text) {
+            if(this.length == 0) return;
+
+            if(text === undefined){
+                return this.doms[0].textContent;
+            }
+
+            this.doms.forEach(function (dom) {
+                dom.textContent = text;
+            });
+
+            return this;
+        },
+
         css : function(name, value) {
             if(this.length == 0) return;
 
@@ -186,6 +200,19 @@ define([],function(){
             left = Number(left.substring(0, left.length-2));
 
             return {"top" : top, "left" : left};
+        },
+
+        parent : function(){
+
+        },
+
+
+        animate : function(){
+
+        },
+
+        bind : function(){
+
         },
 
 
@@ -312,6 +339,8 @@ define([],function(){
 
     $m.fn.init.prototype = $m.fn;
 
+
+    // 유틸
     $m.clone = function(elem){
         var newNode;
         if(typeof elem === "string"){
@@ -323,23 +352,10 @@ define([],function(){
         }
         return newNode;
     };
-/*
 
-    $m.qs = function(sel) {
-        return document.querySelector(sel);
-    };
-
-    $m.qsa = function(sel){
-        return document.querySelectorAll(sel);
-    };
-*/
-
-
-    // 유틸
     $m.scrollTo = function(x, y){
         window.scrollTo(x,y);
     };
-
 
 
     // 함수형 프로그래밍 라이브러리

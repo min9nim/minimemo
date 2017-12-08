@@ -112,18 +112,9 @@ define(["jquery"
         var txt = memoData.txt;
         var createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
         var firstTxt = txt.substr(0, 1).toUpperCase();
-/*
-
-        txt = txt.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
-                .replace(/\n/gi, "<br/>")  // 새줄표시
-                .replace(/[\s]/gi, "&nbsp;") // 공백표시
-                .autoLink({target: "_blank"});
-
-*/
 
         txt = _br_nbsp_link(txt);
 
-        //console.log("txt = " + txt + ", firstTxt = " + firstTxt);
         var removeBtn = "";
         var editBtn = "";
         if (typeof userInfo != null) {// 내가 작성한 글인 경우만 수정/삭제버튼이 표시
@@ -391,7 +382,7 @@ define(["jquery"
     };
 
     mm.topNavi = function () {
-        $(window).scrollTop(0);
+        $m.scrollTo("", 0);
     };
 
     mm.titleClick = function () {
