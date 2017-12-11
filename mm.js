@@ -99,7 +99,7 @@ define(["jquery"
                 if(word){ // 매칭단어 하이라이트
                     newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
                 }
-                if(val.indexOf("http") === 0){
+                if(val.indexOf("http://") == 0 || val.indexOf("https://") == 0){
                     return `<a href="${val}" target="_blank">${newval}</a>`;
                 }else{
                     return newval;
