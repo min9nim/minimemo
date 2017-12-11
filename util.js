@@ -1,25 +1,4 @@
 
-Function.prototype.method = function(name, func){
-    this.prototype[name] = func;
-    return this;
-};
-
-Function.method("new", function () {
-    var that = Object.create(this.prototype);
-    var other = this.apply(that, arguments);
-    return (typeof other === "object" && other) || that;
-});
-
-
-if ( typeof Object.create !== "function") {
-    Object.create = function(o){
-        var F = function(){};
-        F.prototype = o;
-        return new F();
-    };
-}
-
-
 //http://www.mojavelinux.com/articles/javascript_hashes.html
 function HashTable(obj)
 {
@@ -121,7 +100,7 @@ function HashTable(obj)
 
 
 define([],function(){
-    $m = function(sel){
+    var $m = function(sel){
         return new $m.fn.init(sel);
     };
 
