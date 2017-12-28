@@ -126,7 +126,7 @@ define([],function(){
                 return this.doms[0].innerHTML;
             }
 
-            this.doms.forEach(function (dom) {
+            $m._each(this.doms, function (dom) {
                 dom.innerHTML = html;
             });
 
@@ -140,7 +140,7 @@ define([],function(){
                 return this.doms[0].textContent;
             }
 
-            this.doms.forEach(function (dom) {
+            $m._each(this.doms, function (dom) {
                 dom.textContent = text;
             });
 
@@ -161,7 +161,7 @@ define([],function(){
                 }
             }
 
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.style[name] = value;
             });
 
@@ -203,7 +203,7 @@ define([],function(){
                 return this.doms[0].getAttribute(name);
             }
 
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.setAttribute(name, value);
             });
 
@@ -214,7 +214,7 @@ define([],function(){
         removeAttr : function(name) {
             if(this.length == 0) return;
 
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.removeAttribute(name);
             });
 
@@ -222,7 +222,7 @@ define([],function(){
         },
 
         addClass : function(name) {
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 var cls = dom.getAttribute("class");
                 //cls = cls.split(" ").push(name).join(" ");
                 cls = cls + " " + name;
@@ -234,7 +234,7 @@ define([],function(){
 
 
         removeClass : function(name) {
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 var cls = dom.getAttribute("class");
                 var arr = cls.split(" ");
                 var idx = arr.indexOf(name);
@@ -249,7 +249,7 @@ define([],function(){
         },
 
         each : function(func) {
-            this.doms.forEach(function(val, key, arr){
+            $m._each(this.doms, function(val, key, arr){
                 func.call(val, val, key, arr);
             });
 
@@ -257,13 +257,13 @@ define([],function(){
         },
 
         remove : function(){
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.parentNode.removeChild( dom );
             });
         },
 
         append : function(elem){
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 if ( dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9 ) {
                     dom.appendChild($m.clone(elem));
                 }
@@ -272,7 +272,7 @@ define([],function(){
         },
 
         prepend : function(elem){
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 if ( dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9 ) {
                     dom.insertBefore($m.clone(elem), dom.firstChild);
                 }
@@ -281,14 +281,14 @@ define([],function(){
         },
 
         show : function(){
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.style.display = "block";
             });
             return this;
         },
 
         hide : function(){
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.style.display = "none";
             });
             return this;
@@ -301,7 +301,7 @@ define([],function(){
                 return this.doms[0].value;
             }
 
-            this.doms.forEach(function(dom){
+            $m._each(this.doms, function(dom){
                 dom.value = value;
             });
 
