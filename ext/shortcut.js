@@ -29,6 +29,7 @@ var shortcut = {
 
 		//The function to be called at keypress
 		var func = function(e) {
+			var code, k;
 			e = e || window.event;
 
 			if(opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields

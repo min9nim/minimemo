@@ -4,7 +4,7 @@ var $nprogress = require("./ext/nprogress.js");
 var $randomcolor = require("./ext/randomColor.js");
 var $shortcut = require("./ext/shortcut.js");
 var $m = require("./util.js");
-var _ = require("./ext/partial.js");
+//var _ = require("./ext/partial.js");
 
 
 
