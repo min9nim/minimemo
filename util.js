@@ -221,29 +221,35 @@ $m.fn = {
         return this;
     },
 
-    addClass : function(name) {
-        $m._each(this.doms, function(dom){
-            var cls = dom.getAttribute("class");
-            //cls = cls.split(" ").push(name).join(" ");
-            cls = cls + " " + name;
-            dom.setAttribute("class", cls);
-        });
+        addClass : function(name) {
+            $m._each(this.doms, function(dom){
+                var cls = dom.getAttribute("class");
+                if(cls === null){
+                    cls = name;
+                }else{
+                    cls = cls + " " + name;
+                }
+                dom.setAttribute("class", cls);
+            });
 
         return this;
     },
 
 
-    removeClass : function(name) {
-        $m._each(this.doms, function(dom){
-            var cls = dom.getAttribute("class");
-            var arr = cls.split(" ");
-            var idx = arr.indexOf(name);
-            if(idx < 0){
-                return;
-            }
-            arr.splice(idx, 1);
-            dom.setAttribute("class", arr.join(" "));
-        });
+        removeClass : function(name) {
+            $m._each(this.doms, function(dom){
+                var cls = dom.getAttribute("class");
+                if(cls === null){
+                    return this;
+                }
+                var arr = cls.split(" ");
+                var idx = arr.indexOf(name);
+                if(idx < 0){
+                    return;
+                }
+                arr.splice(idx, 1);
+                dom.setAttribute("class", arr.join(" "));
+            });
 
         return this;
     },
