@@ -7,16 +7,16 @@ minimemo 는 SNS 기능이 빠진 개인용 한줄 블로그이다. 잠깐동안
 * Front-end : es6, requirejs, babel
 
 
-#### 기능설명
+### 기능설명
 * 단축키
   * Alt(or meta) + W : 글쓰기
-  * Alt(or meta) + s : 검색
+  * Alt(or meta) + S : 검색
   * Alt(or meta) + Enter : 저장/조회
 
 
-#### 이후 추가될 기능
+### 이후 추가될 기능
 * 내용 저장시 애니메이션 효과
 
 
-#### 라이선스
+### 라이선스
 MIT License
