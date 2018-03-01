@@ -4,7 +4,7 @@ minimemo 는 SNS 기능이 빠진 개인용 한줄 블로그이다. 잠깐동안
 
 ### 개발환경
 * Back-end : [firebase](https://firebase.google.com)
-* Front-end : es6, requirejs, babel, vuejs
+* Front-end : es6, requirejs, babel
 
 
 #### 기능설명
