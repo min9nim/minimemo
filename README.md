@@ -3,13 +3,13 @@ minimemo 는 SNS 기능이 없는 개인용 **비공개** 한줄 블로그다. �
 
 
 ### 서비스 이용방법
-* 접근주소: http://minimemo.site
+* 접근주소: https://minimemo.site
 * 구글계정으로 로그인 가능
 * 끝
 
 ### 개발환경
 * Back-end : [firebase](https://firebase.google.com)
-* Front-end : es6, requirejs, babel
+* Front-end : es6, requirejs, webpack3, babel
 
 
 ### 기능설명
