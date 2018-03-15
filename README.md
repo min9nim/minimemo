@@ -25,11 +25,11 @@ minimemo 는 SNS 기능이 없는 개인용 한줄 블로그다. 잠깐 내 마�
 
 
 ### 스크린샷
-* 글목록
+* 글목록  
 ![list](https://raw.githubusercontent.com/min9nim/minimemo/master/list.png)
-* 글쓰기
+* 글쓰기  
 ![write](https://raw.githubusercontent.com/min9nim/minimemo/master/write.png)
-* 검색
+* 검색  
 ![search](https://raw.githubusercontent.com/min9nim/minimemo/master/search.png)
 
 
