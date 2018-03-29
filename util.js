@@ -181,8 +181,31 @@ $m.fn = {
         return {"top" : top, "left" : left};
     },
 
-    parent : function(){
+    parent : function(selector, ele){
+        if(this.length === 0) return;
 
+        if(ele === undefined){
+            ele = this.doms[0];
+        }else{
+            if(ele.tagName === "BODY") return;
+        }
+
+        if(selector === undefined){
+            return ele.parentNode;
+        }
+
+        if(selector[0] === "#"){
+            // id로 찾기
+        }else if(selector[0] === "."){
+            // 클래스로 찾기
+        }else{
+            // 태그로 찾기
+            if(ele.parentNode.tagName === selector.toUpperCase()){
+                return ele.parentNode;
+            }else{
+                return this.parent(selector, ele.parentNode);
+            }
+        }
     },
 
 

@@ -151,6 +151,7 @@ function setHeader() {
         $m("#nickname").val(userInfo.data.nickname);
         $m("#fontSize").val(userInfo.data.fontSize.replace("px", ""));
         $m("#iconColor").val(userInfo.data.iconColor);
+        mm.iconColor(userInfo.data.iconColor)
     } else {
         $m(".header .title").html("minimemo");
     }
@@ -346,11 +347,29 @@ mm.setFontSize = function (size) {
 mm.setIconColor = function (color) {
     userInfo.data.iconColor = color;
     firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m("#list i.circle").each(function (val, key, arr) {
-        var bgcolor = $randomcolor({hue: color, luminosity: "dark"});
-        $m(val).css("background-color", bgcolor);
-    });
+    mm.iconColor(color);
 };
+
+mm.iconColor = function(color){
+    $m("#list i.circle").each(function (val, key, arr) {
+        $m(val).css("background-color"
+            , $randomcolor({hue: color, luminosity: "dark"})
+        );
+    });
+
+    $m(".header").css("background-color"
+        , $randomcolor({hue: color, luminosity: "dark"})
+    );
+
+    $m("#topNavi").css("background-color"
+        , $randomcolor({hue: color, luminosity: "dark"})
+    );
+
+    var tmp = $randomcolor({hue: color, luminosity: "dark"});
+    $m("#addBtn").css("background-color", tmp);
+    $m($m("#addBtn").parent()).css("background-color", tmp);
+}
+
 
 mm.bodyScroll = function () {
     if ($m(".state").html() != "") {// 검색결과 일때

@@ -5,12 +5,10 @@ module.exports = {
     entry: {
         bundle: './app.js',
     }
-
     , output: {
         path: path.resolve(__dirname, '.'),
         filename: '[name].js'
     }
-
     , module: {
         loaders: [
             {
@@ -24,8 +22,7 @@ module.exports = {
             }
         ]
     }
-
-
+    /*
     , plugins: [
         new webpack.optimize.UglifyJsPlugin({     // es6이상은 지원하지 못함
             sourceMap: true,
@@ -34,5 +31,6 @@ module.exports = {
             },
         })
     ]
+    */
 
 };
