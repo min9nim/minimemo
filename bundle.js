@@ -98,6 +98,12 @@ module.exports = function(module) {
 "use strict";
 
 
+var _mm = __webpack_require__(2);
+
+var _mm2 = _interopRequireDefault(_mm);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 // Initialize Firebase
 var config = {
     apiKey: "AIzaSyDrdUoYgtjhIGHOLxvEQtq3oUlximeEMI8",
@@ -109,9 +115,11 @@ var config = {
 };
 firebase.initializeApp(config);
 
-var mm = __webpack_require__(2);
-window.mm = mm;
-mm.init();
+//var mm = require("./mm.js");
+
+
+window.mm = _mm2.default;
+_mm2.default.init();
 
 /***/ }),
 /* 2 */
@@ -130,6 +138,7 @@ var $m = __webpack_require__(7);
 
 var mm = {};
 module.exports = mm;
+//export {mm};
 
 var userInfo = null // 로그인한 사용자 정보
 ,
@@ -479,6 +488,9 @@ mm.iconColor = function (color) {
     var tmp = $randomcolor({ hue: color, luminosity: "dark" });
     $m("#addBtn").css("background-color", tmp);
     $m($m("#addBtn").parent()).css("background-color", tmp);
+
+    $m("#btn_search").css("background-color", tmp);
+    $m("#btn_cancel").css("background-color", tmp);
 };
 
 mm.bodyScroll = function () {

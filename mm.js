@@ -368,6 +368,9 @@ mm.iconColor = function(color){
     var tmp = $randomcolor({hue: color, luminosity: "dark"});
     $m("#addBtn").css("background-color", tmp);
     $m($m("#addBtn").parent()).css("background-color", tmp);
+
+    $m("#btn_search").css("background-color", tmp);
+    $m("#btn_cancel").css("background-color", tmp);
 }
 
 
