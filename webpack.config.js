@@ -22,6 +22,7 @@ module.exports = {
             }
         ]
     }
+    , watch : true
     /*
     , plugins: [
         new webpack.optimize.UglifyJsPlugin({     // es6이상은 지원하지 못함

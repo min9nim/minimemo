@@ -65,6 +65,11 @@
             <option value="monochrome">monochrome</option>
         </select></div>
     </li>
+    <li class="collection-item">
+        <div class="menuTitle" onclick="mm.signOut()" style="cursor: pointer;"><i class="material-icons circle">S</i>signOut</div>
+        <div class="menuContent"></div>
+    </li>
+
 </ul>
 <ul id="list" class="collection" onclick="mm.listClick();" ontouchstart="mm.listClick();"></ul>
 <div id="topBtn" class="fixed-action-btn" style="bottom: 110px; right: 24px;">
@@ -94,6 +99,7 @@
     </div>
 </div>
 <script type="text/javascript" src="ext/firebase.js"></script>
+<script type="text/javascript" src='initFirebase.js'></script>
 <script type="text/javascript" src="bundle.js"></script>
 </body>
 </html>

@@ -104,21 +104,9 @@ var _mm2 = _interopRequireDefault(_mm);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Initialize Firebase
-var config = {
-    apiKey: "AIzaSyDrdUoYgtjhIGHOLxvEQtq3oUlximeEMI8",
-    authDomain: "minimemo-3ea72.firebaseapp.com",
-    databaseURL: "https://minimemo-3ea72.firebaseio.com",
-    projectId: "minimemo-3ea72",
-    storageBucket: "minimemo-3ea72.appspot.com",
-    messagingSenderId: "55060595181"
-};
-firebase.initializeApp(config);
-
+window.mm = _mm2.default;
 //var mm = require("./mm.js");
 
-
-window.mm = _mm2.default;
 _mm2.default.init();
 
 /***/ }),
@@ -138,7 +126,6 @@ var $m = __webpack_require__(7);
 
 var mm = {};
 module.exports = mm;
-//export {mm};
 
 var userInfo = null // 로그인한 사용자 정보
 ,
@@ -330,16 +317,14 @@ function setTouchSlider(row) {
     row.bind("touchend", touchend);
 }
 
-mm.signout = function () {
-    firebase.auth().signOut().then(function () {
-        //userInfo = null;
-        //$("#list").html("");
-        //$("#writeBtn").hide();
-        //alert('Signed Out');
-        // index.html 의 로그아웃 공통처리 로직이 수행됨
-    }, function (error) {
-        console.error("Sign Out Error", error);
-    });
+mm.signOut = function () {
+    if (confirm("로그아웃 합니다")) {
+        firebase.auth().signOut().then(function () {
+            location.href = "/login.html";
+        }, function (error) {
+            console.error("Sign Out Error", error);
+        });
+    }
 };
 
 mm.searchFirstTxt = function (obj) {
@@ -425,12 +410,15 @@ function login() {
                 initMemoList(userInfo.uid);
             });
         } else {
+            location.href = "/login.html";
+            /*
             userInfo = null;
             setHeader();
             $nprogress.done();
             if (confirm("로그인이 필요합니다")) {
                 firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
             }
+            */
         }
     });
 }
@@ -489,8 +477,8 @@ mm.iconColor = function (color) {
     $m("#addBtn").css("background-color", tmp);
     $m($m("#addBtn").parent()).css("background-color", tmp);
 
-    $m("#btn_search").css("background-color", tmp);
-    $m("#btn_cancel").css("background-color", tmp);
+    $m("#btn_search").css("background-color", $randomcolor({ hue: color, luminosity: "dark" }));
+    $m("#btn_cancel").css("background-color", $randomcolor({ hue: color, luminosity: "dark" }));
 };
 
 mm.bodyScroll = function () {

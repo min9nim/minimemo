@@ -205,16 +205,14 @@ function setTouchSlider(row) {
 }
 
 
-mm.signout = function () {
-    firebase.auth().signOut().then(function () {
-        //userInfo = null;
-        //$("#list").html("");
-        //$("#writeBtn").hide();
-        //alert('Signed Out');
-        // index.html 의 로그아웃 공통처리 로직이 수행됨
-    }, function (error) {
-        console.error("Sign Out Error", error);
-    });
+mm.signOut = function () {
+    if(confirm("로그아웃 합니다")){
+        firebase.auth().signOut().then(function () {
+            location.href="/login.html"
+        }, function (error) {
+            console.error("Sign Out Error", error);
+        });
+    }
 }
 
 mm.searchFirstTxt = function (obj) {
@@ -299,12 +297,15 @@ function login(){
                 initMemoList(userInfo.uid);
             });
         } else {
+            location.href = "/login.html";
+            /*
             userInfo = null;
             setHeader();
             $nprogress.done();
             if (confirm("로그인이 필요합니다")) {
                 firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
             }
+            */
         }
     });
 }
@@ -369,8 +370,8 @@ mm.iconColor = function(color){
     $m("#addBtn").css("background-color", tmp);
     $m($m("#addBtn").parent()).css("background-color", tmp);
 
-    $m("#btn_search").css("background-color", tmp);
-    $m("#btn_cancel").css("background-color", tmp);
+    $m("#btn_search").css("background-color", $randomcolor({hue: color, luminosity: "dark"}));
+    $m("#btn_cancel").css("background-color", $randomcolor({hue: color, luminosity: "dark"}));
 }
 
 
