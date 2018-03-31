@@ -1,0 +1,19 @@
+<html>
+
+    <head>
+        <script src="//cdn.jsdelivr.net/npm/ramda@0.25/dist/ramda.min.js"></script>
+    </head>
+
+    <body>
+        <div class="item" />
+        <div class="item" />
+        <div class="item" />
+        <script>
+            R.forEach(function() {
+                console.log("arguments.length = " + arguments.length)
+            }, document.querySelectorAll(".item"));
+
+        </script>
+    </body>
+
+</html>

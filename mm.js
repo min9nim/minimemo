@@ -4,6 +4,7 @@ var $nprogress = require("./ext/nprogress.js");
 var $randomcolor = require("./ext/randomColor.js");
 var $shortcut = require("./ext/shortcut.js");
 var $m = require("./util.js");
+const R = require('./ext/ramda.js');
 //var _ = require("./ext/partial.js");
 
 
@@ -352,26 +353,23 @@ mm.setIconColor = function (color) {
 };
 
 mm.iconColor = function(color){
+    const setBgColor = (selector, color2) => $m(selector).css("background-color", color2 ? color2 : $randomcolor({hue: color, luminosity: "dark"}));
+
+    // 각 row 들
+    /*
     $m("#list i.circle").each(function (val, key, arr) {
-        $m(val).css("background-color"
-            , $randomcolor({hue: color, luminosity: "dark"})
-        );
+        setBgColor(val);
     });
+    */
 
-    $m(".header").css("background-color"
-        , $randomcolor({hue: color, luminosity: "dark"})
-    );
+    // R.forEach(setBgColor, $m("#list i.circle").doms);    // 이거는 안됨, https://min9nim.github.io/frontend/2018/03/31/ramdajs-forEach.html
+    R.forEach(val => setBgColor(val), $m("#list i.circle").doms);
 
-    $m("#topNavi").css("background-color"
-        , $randomcolor({hue: color, luminosity: "dark"})
-    );
-
+    // 헤더 및 버튼들
+    R.forEach(setBgColor, [".header", "#topNavi", "#btn_search", "#btn_cancel"]);
     var tmp = $randomcolor({hue: color, luminosity: "dark"});
-    $m("#addBtn").css("background-color", tmp);
-    $m($m("#addBtn").parent()).css("background-color", tmp);
-
-    $m("#btn_search").css("background-color", $randomcolor({hue: color, luminosity: "dark"}));
-    $m("#btn_cancel").css("background-color", $randomcolor({hue: color, luminosity: "dark"}));
+    setBgColor("#addBtn", tmp);
+    setBgColor($m("#addBtn").parent(), tmp);
 }
 
 
@@ -401,7 +399,8 @@ mm.titleClick = function () {
     if (userInfo) {
         showMemoList(userInfo.uid);
     } else {
-        firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+        location.href = "/login.html";
     }
 };
 
@@ -410,7 +409,6 @@ mm.init = function () {
     $nprogress.start();  // https://github.com/rstacruz/nprogress
     login();
     setShortcut();
-
     firebase.database().ref(".info/connected").on("value", function (snap) {
         if (snap.val() === true) {
             conOn();
