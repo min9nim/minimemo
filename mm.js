@@ -1,9 +1,9 @@
 
-var $ = require("./ext/jquery.js");
-var $nprogress = require("./ext/nprogress.js");
-var $randomcolor = require("./ext/randomColor.js");
-var $shortcut = require("./ext/shortcut.js");
-var $m = require("./util.js");
+const $ = require("./ext/jquery.js");
+const $nprogress = require("./ext/nprogress.js");
+const $randomcolor = require("./ext/randomColor.js");
+const $shortcut = require("./ext/shortcut.js");
+const $m = require("./util.js");
 const R = require('./ext/ramda.js');
 //var _ = require("./ext/partial.js");
 
@@ -384,9 +384,15 @@ mm.bodyScroll = function () {
         var end = memoList.length - $m("#list li").length;
         var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
         var nextList = memoList.slice(start, end).reverse();
+
+        /*
         nextList.forEach(function (x, i) {
             addItem(x.key, x.val(), "append");
         });
+        */
+
+        R.forEach(x => addItem(x.key, x.val(), "append"), nextList);
+
         $nprogress.done();
     }
 };

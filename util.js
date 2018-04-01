@@ -104,6 +104,8 @@ var $m = function(sel){
     return new $m.fn.init(sel);
 };
 
+module.exports = $m;
+
 $m.fn = {
     init :  function(sel){
         if(typeof sel == "string"){
@@ -446,6 +448,3 @@ $m._pipe = function () {
         }, arguments[0]);
     }
 };
-
-
-module.exports = $m;
