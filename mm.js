@@ -5,7 +5,7 @@ const $randomcolor = require("./ext/randomColor.js");
 const $shortcut = require("./ext/shortcut.js");
 const $m = require("./util.js");
 const R = require('./ext/ramda.js');
-//var _ = require("./ext/partial.js");
+const _ = require('./ext/partial.js');
 
 
 
@@ -25,9 +25,9 @@ function showMemoList(uid) {
     $m(".state").html("");
     $m("#list").html("");
 
-    timelog("최근 50개 로드 전 ");
+    //timelog("최근 50개 로드 전 ");
     firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
-        timelog("최근 50개 로드 후 ");
+        //timelog("최근 50개 로드 후 ");
 
         $m._each(snapshot.val(), function(val, key){
             addItem(key, val);
@@ -462,11 +462,18 @@ mm.searchMemo = function () {
 
         $m(".header .title").html(memoList.length + " memos");
         $m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
-
+/*
         $m(".txt").each(function (val, key, arr) {
             var oriTxt = txts[txts.length-1-key];
             $m(val).html(_br_nbsp_link(oriTxt, word));
         });
+*/
+
+        _.each($m(".txt").doms, (val, key) => _.go(
+                _.mr(txts[txts.length-1-key], word),
+                _br_nbsp_link,
+                _($m.eleHtml, val)
+            ));
     });
 };
 

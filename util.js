@@ -368,6 +368,11 @@ $m.scrollTo = function(x, y){
 };
 
 
+$m.eleHtml = function(selector, html){
+    $m(selector).html(html);
+}
+
+
 // 함수형 프로그래밍 라이브러리
 $m._curry = function(fn){
     return function(a,b){
