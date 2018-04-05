@@ -4,6 +4,7 @@ const $nprogress = require("./ext/nprogress.js");
 const $randomcolor = require("./ext/randomColor.js");
 const $shortcut = require("./ext/shortcut.js");
 const $m = require("./util.js");
+const Vue = require("./ext/vue.js");
 const R = require('./ext/ramda.js');
 const _ = require('./ext/partial.js');
 
@@ -49,14 +50,13 @@ function initMemoList(uid) {
 }
 
 function onChildAdded(data) {
-    //console.log("## onChildAdded called : " + memoList.length);
     memoList.push(data);
     var curDate = Date.now();
     var createDate = data.val().createDate;
     var diff = curDate - createDate;
     //console.log(diff);
     if (diff < 1000) {// 방금 새로 등록한 글인 경우만
-        addItem(data.key, data.val());
+        addItem(data.key, data.val(), "append");
         if ($m(".state").html() === "") {
             $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
         } else {
@@ -66,17 +66,40 @@ function onChildAdded(data) {
 }
 
 function addItem(key, memoData, how) {
+    /*
     var html = getMemoHtml(key, memoData);
-
     if (how == "append") {
         $m("#list").append(html.li);
     } else {
         $m("#list").prepend(html.li);
     }
+    */
+
+    if(how === "append"){
+        app.memos.splice(0, 0, {
+            key: key,
+            createDate : (new Date(memoData.createDate)).toString().substr(4, 17),
+            firstTxt : memoData.txt.substr(0, 1).toUpperCase(),
+            txt : _br_nbsp_link(memoData.txt),
+        })
+    }else{
+        app.memos.push({
+            key: key,
+            createDate : (new Date(memoData.createDate)).toString().substr(4, 17),
+            firstTxt : memoData.txt.substr(0, 1).toUpperCase(),
+            txt : _br_nbsp_link(memoData.txt),
+        })
+
+    }
+
+
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
-    setContextBtnEvent($("#" + key + " .btnContext"));
-    setTouchSlider($("#" + key));
+    Vue.nextTick(function() {
+        setContextBtnEvent($("#" + key + " .btnContext"));
+        setTouchSlider($("#" + key));
+    });
+
 }
 
 function _br_nbsp_link(str, word){
@@ -129,19 +152,32 @@ function getMemoHtml(key, memoData) {
 function onChildChanged(data) {
     var key = data.key;
     var memoData = data.val();
-    var html = getMemoHtml(key, memoData);
-    $m("#" + key).html(html.liChild);
-    $("#" + key).animate({left: "0px"}, 300);
+
+    //var html = getMemoHtml(key, memoData);
+    //$m("#" + key).html(html.liChild);
+    _.go(
+    	app.memos,
+        _.find(o => o.key === key),
+        function(res){
+            res.createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
+            res.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
+            res.txt = _br_nbsp_link(memoData.txt);
+        }
+    )
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
-    setContextBtnEvent($("#" + key + " .btnContext"));
-    //window.scrollTo("", $m("#"+key).dom.offsetTop + $m("#list").dom.offsetTop);   // .dialog 의 top를 미리 옮겨놓았기 때문에 불필요
+    Vue.nextTick(function(){
+        setContextBtnEvent($("#" + key + " .btnContext"));
+    });
 
+    $("#" + key).animate({left: "0px"}, 300);
 }
 
 function onChildRemoved(data) {
     var key = data.key;
-    $m("#" + key).remove();
+    $("#" + key).animate({left: "0px"}, 300);
+    app.memos.splice(_.findIndex(app.memos, o => o.key === key), 1);
+    //$m("#" + key).remove();
     memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
     $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
 }
@@ -274,6 +310,8 @@ function login(){
                 //timelog("사용자 정보 로드 후");
                 if (snapshot.val() != null) {
                     userInfo.data = snapshot.val();
+                    app.user = JSON.parse(JSON.stringify(userInfo.data));
+
                     setHeader();
                     $m("#list li .circle").each(function(val, key, arr){
                         var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "all", luminosity: "dark"});  // https://randomcolor.llllll.li/
@@ -341,7 +379,7 @@ mm.setNickname = function (nickname) {
 
 
 mm.setFontSize = function (size) {
-    userInfo.data.fontSize = size + "px";
+    app.user.fontSize = userInfo.data.fontSize = size + "px";
     firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
     $m(".txt").css("font-size", userInfo.data.fontSize);
 };
@@ -391,7 +429,7 @@ mm.bodyScroll = function () {
         });
         */
 
-        R.forEach(x => addItem(x.key, x.val(), "append"), nextList);
+        R.forEach(x => addItem(x.key, x.val()), nextList);
 
         $nprogress.done();
     }
