@@ -1,4 +1,4 @@
-// Partial.js 1.1.0
+// Partial.js 1.1.4
 // Project Lead - Indong Yoo
 // Maintainers - Piljung Park, Hanah Choi
 // Contributors - Joeun Ha, Byeongjin Kim, Jeongik Park
@@ -260,16 +260,23 @@
     var f = __(arguments);
     return f.__catch_pipe = true, f;
   };
-
   _.all2 = function(args) {
-    var res = [], tmp;
-    for (var i = 1, l = arguments.length; i < l; i++) {
-      tmp = _.is_mr(args) ?
-        arguments[i].apply(this == _ ? null : this, args) : arguments[i].call(this == _ ? null : this, args);
+    var res = [], tmp, i = 0, al = arguments.length, thiz = this == _ ? null : this;
+    while (++i < al) {
+      tmp = arguments[i][_.is_mr(args) ? 'apply' : 'call'](thiz, args);
       if (_.is_mr(tmp)) for (var j = 0, l = tmp.length; j < l; j++) res.push(tmp[j]);
       else res.push(tmp);
     }
     return to_mr(res);
+  };
+  _.all = _.All = function(arg) {
+    var fns = [], count = -1;
+    if (_.is_number(arg))
+      return function f() { return ++count < arg ? (fns.push(_.pipe(arguments)), f) : _.all2.apply(this, [to_mr(arguments)].concat(fns)) };
+    fns = _.last(arguments);
+    if (_.is_array(fns)) return _.all2.apply(this, [to_mr(arg)].concat(fns));
+    fns = _.to_array(arguments);
+    return function() { return _.all2.apply(this, [to_mr(arguments)].concat(fns)) }
   };
   _.spread2 = function(args) {
     var fns = _.rest(arguments, 1), res = [], tmp;
@@ -281,12 +288,6 @@
     }
     return to_mr(res);
   };
-  _.all = _.All = function() {
-    var fns = _.last(arguments);
-    if (_.isArray(fns)) return _.all2.apply(this, [to_mr(_.initial(arguments))].concat(fns));
-    fns = _.toArray(arguments);
-    return function() { return _.all2.apply(this, [to_mr(arguments)].concat(fns)); };
-  };
   _.spread = _.Spread = function() {
     var fns = _.last(arguments);
     if (_.isArray(fns)) return _.spread2.apply(this, [to_mr(_.initial(arguments))].concat(fns));
@@ -296,6 +297,7 @@
 
   _.if = _.If = function(predi, fn) {
     var store = [fn ? [predi, fn] : [_.identity, predi]];
+    G.console && console.warn("_.if 함수는 곧 _.if2로 대체될 예정입니다.");
     return _.extend(If, {
       else_if: elseIf,
       elseIf: elseIf,
@@ -303,21 +305,45 @@
     });
     function elseIf(predi, fn) { return store.push(fn ? [predi, fn] : [_.identity, predi]) && If; }
     function If() {
-      var context = this, args = arguments;
+      var args = arguments;
       return _.go.call(this, store,
-        _(_.find, _, function(fnset) { return fnset[0].apply(context, args); }),
-        function(fnset) { return fnset ? fnset[1].apply(context, args) : void 0; });
+        _.find(function(fnset) { return fnset[0].apply(this, args); }),
+        function(fnset) { return fnset ? fnset[1].apply(this, args) : void 0; });
     }
   };
+
+  _.if2 = _.If2 = function() {
+    var predi = _.pipe(arguments);
+    return function() {
+      var store = [[predi, _.pipe(arguments)]];
+      return _.extend(If, {
+        else_if: elseIf,
+        elseIf: elseIf,
+        else: function() { return store.push([_.constant(true), _.pipe(arguments)]) && If; }
+      });
+      function elseIf() {
+        var predi = _.pipe.apply(this, arguments);
+        return function() { return store.push([predi, _.pipe(arguments)]) && If; };
+      }
+      function If() {
+        var args = arguments;
+        return _.go.call(this, store,
+          _.find(function(fnset) { return fnset[0].apply(this, args); }),
+          function(fnset) { return fnset ? fnset[1].apply(this, args) : void 0; });
+      }
+    };
+  };
+
   _.or = function() {
     var fns = arguments;
     return function() {
+      var args = to_mr(arguments);
       return function f(res, i) {
         if (i == fns.length) return;
         return _.go(res, fns[i], function(res) {
-          return res || _.go(mr(res, i+1), f);
+          return res || f(args, i+1);
         });
-      }(to_mr(arguments), 0);
+      }(args, 0);
     }
   };
 
@@ -345,7 +371,7 @@
   _.loge = window.console && window.console.error ? console.error.bind ? console.error.bind(console) : function() { console.error.apply(console, arguments); } : _.idtt;
   _.Err = function(message) { return new Error(message); };
   _.hi = _.tap(_.log);
-  _.Hi = function(pre) { return _(_.log, pre); };
+  _.Hi = function(pre) { return _.tap(_(_.log, pre))};
 
   _.f = function(nodes) {
     var f = _.val(window, nodes);
@@ -459,11 +485,15 @@
   }(0);
 
   _.wait = function(t) {
-    return _.callback(function() {
-      var args = arguments, cb = args[args.length-1];
-      args.length--;
-      setTimeout(function() { cb.apply(null, args); }, t || 0);
-    });
+    return function() {
+      var args = arguments;
+      return _.go(new Promise(function(resolve) {
+          setTimeout(resolve, t || 0);
+        }),
+        function() {
+          return _.to_mr(arguments);
+        })
+    };
   };
   _.delay = function(func, wait) {
     var args = slice.call(arguments, 2);
@@ -643,13 +673,30 @@
 
     if (str.indexOf('#') == 0)
       return lambda[str] = function(id) { return function($) { return $.id == id; } }(parseInt(str.substr(1)));
-    if (!str.match(/=>/))
-      return lambda[str] = new Function('$', 'return (' + str + ')');
+
+    if (!str.match(/=>/)) return lambda[str] = new Function(lamda_make_$args_str(str), 'return (' + str + ')');
+
     if (has_lambda) return lambda[str] = eval(str); // es6 lambda
     var ex_par = str.split(/\s*=>\s*/);
     return lambda[str] = new Function(
       ex_par[0].replace(/(?:\b[A-Z]|\.[a-zA-Z_$])[a-zA-Z_$\d]*|[a-zA-Z_$][a-zA-Z_$\d]*\s*:|this|arguments|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, '').match(/([a-z_$][a-z_$\d]*)/gi) || [],
       'return (' + ex_par[1] + ')');
+  }
+
+  function lamda_make_$args_str(str) {
+    return _.go(
+      str.match(/\$\d*/g),
+      _.map(function(v) { return v.slice(1) }),
+      _.max,
+      function(num_args) {
+        if (num_args == "" || num_args == undefined) return '$';
+        return _.go(
+          _.range(2, parseInt(num_args)+1),
+          _.reduce(function(m, v) {
+            return m + ', $' + v;
+          }, "$")
+        )
+      });
   }
 
   function bexdf(setter, args) {
@@ -734,7 +781,7 @@
 
   _.cmap = collf(null, function(data, iter, ks, evd, i, l, k) {
     if (!l) return _.aidtt([]);
-    var res = [];
+    var res = i == 0 ? [evd] : [];
     while (++i < l) res[i] = iter(data[k = ks ? ks[i] : i], k, data);
     return _.map(res, _.aidtt);
   });
@@ -1096,13 +1143,13 @@
   };
 
   // async not supported
-  _.find_i = _.findIndex = collf(function(data, iter, X, X, i, l) {
+  _.find_i = _.findIndex = collf(function(data, iter, X, X2, i, l) {
     while (++i < l) if (iter(data[i], i, data)) return i;
     return -1;
   });
 
   // async not supported
-  _.findLastIndex = _.find_last_i = collf(function(data, iter, X, X, X, l) {
+  _.findLastIndex = _.find_last_i = collf(function(data, iter, X, X2, X3, l) {
     while (l--) if (iter(data[l], l, data)) return l;
     return -1;
   });
@@ -1578,7 +1625,10 @@
       return _.select(_box_data, make_sel(el));
     }
     function make_sel(el) {
-      return _.isString(el) ? el : function(el){
+      return _.isString(el) ? function(el) {
+        if (el.indexOf('./') < 0) return el;
+        return make_sel(document.querySelector('[_sel="' + el + '"]'));
+      }(el) : function(el){
         try {
           var selector = el.getAttribute('_sel').trim();
           if (selector.indexOf('./') < 0) return selector;
@@ -1744,9 +1794,9 @@
   }
   function resovle(self, val) {
     try {
-      if (val && val instanceof Promise) finale(_.extend({ _state: 3, _value: val }));
+      if (val && val instanceof Promise) finale(_.extend(self, { _state: 3, _value: val }));
       else if (val && typeof val.then == 'function') tryp(_.bind(val.then, val), self);
-      else finale(_.extend({ _state: 1, _value: val }));
+      else finale(_.extend(self, { _state: 1, _value: val }));
     } catch (e) { reject(self, e); }
   }
   function reject(self, val) {

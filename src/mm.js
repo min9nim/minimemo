@@ -1,15 +1,15 @@
+import $m from "../src/util.js";
 
-var $ = require("./ext/jquery.js");
-var $nprogress = require("./ext/nprogress.js");
-var $randomcolor = require("./ext/randomColor.js");
-var $shortcut = require("./ext/shortcut.js");
-var $m = require("./util.js");
-//var _ = require("./ext/partial.js");
-
-
+const $ = require("../ext/jquery.js");
+const $nprogress = require("../ext/nprogress.js");
+const $randomcolor = require("../ext/randomColor.js");
+const $shortcut = require("../ext/shortcut.js");
+const Vue = require("../ext/vue.js");
+const _ = require('../ext/partial.js');
 
 var mm = {};
-module.exports = mm;
+
+export {mm, randomcolor, $m, Vue, _}
 
 var userInfo = null // 로그인한 사용자 정보
     , memoRef
@@ -22,14 +22,9 @@ mm.memoList = memoList;
 // local function
 function showMemoList(uid) {
     $m(".state").html("");
-    $m("#list").html("");
-
-    timelog("최근 50개 로드 전 ");
     firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
-        timelog("최근 50개 로드 후 ");
-
         $m._each(snapshot.val(), function(val, key){
-            addItem(key, val);
+            addItem(key, val, "append");
         });
     });
 }
@@ -42,46 +37,38 @@ function initMemoList(uid) {
     memoRef.on("child_removed", onChildRemoved);
     memoRef.once('value', function(snapshot) {
         //timelog("전체메모 조회 후");
-        $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+        $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
         $nprogress.done();
     });
 }
 
-function onChildAdded(data) {
-    //console.log("## onChildAdded called : " + memoList.length);
-    memoList.push(data);
-    var curDate = Date.now();
-    var createDate = data.val().createDate;
-    var diff = curDate - createDate;
-    //console.log(diff);
-    if (diff < 1000) {// 방금 새로 등록한 글인 경우만
-        addItem(data.key, data.val());
-        if ($m(".state").html() === "") {
-            $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
-        } else {
-            $m(".header .title").html(memoList.length + " memos");
-        }
+function addItem(key, memoData, how, word) {
+    const memo = {
+        key: key,
+        createDate : (new Date(memoData.createDate)).toString().substr(4, 17),
+        firstTxt : memoData.txt.substr(0, 1).toUpperCase(),
+        txt : _format_txt(memoData.txt, word),
     }
-}
 
-function addItem(key, memoData, how) {
-    var html = getMemoHtml(key, memoData);
+    if(how === "append"){
+        app.memos.splice(0, 0, memo);
+    }else{
+        app.memos.push(memo);
 
-    if (how == "append") {
-        $m("#list").append(html.li);
-    } else {
-        $m("#list").prepend(html.li);
     }
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
-    setContextBtnEvent($("#" + key + " .btnContext"));
-    setTouchSlider($("#" + key));
+    Vue.nextTick(function() {
+        setContextBtnEvent($("#" + key + " .btnContext"));
+        setTouchSlider($("#" + key));
+    });
 }
 
 function _br_nbsp_link(str, word){
     if(word){
         var reg = new RegExp("("+word+")", "gi");
     }
+
     return str.split("\n").map(function(val){
         return val.split(" ").map(function(val){
             var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
@@ -97,77 +84,116 @@ function _br_nbsp_link(str, word){
     }).join("<br/>");   // 새줄문자 <br/> 치환
 }
 
-function getMemoHtml(key, memoData) {
-    var txt = memoData.txt;
-    var createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
-    var firstTxt = txt.substr(0, 1).toUpperCase();
 
-    txt = _br_nbsp_link(txt);
-
-    var removeBtn = "";
-    var editBtn = "";
-    if (typeof userInfo != null) {// 내가 작성한 글인 경우만 수정/삭제버튼이 표시
-        removeBtn = `<i id="btn_delete" onclick='mm.removeMemo("${key}")' class="material-icons">delete</i>`;
-        editBtn = `<i id="btn_edit" onclick='mm.editMemo("${key}")' class="material-icons">edit</i>`;
+function _format_txt(str, word){
+     var _link = (val, word) => {
+        var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
+        if(word){ // 매칭단어 하이라이트
+            var reg = new RegExp("("+word+")", "gi");
+            newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
+        }
+        if(val.indexOf("http://") == 0 || val.indexOf("https://") == 0){
+            return `<a href="${val}" target="_blank">${newval}</a>`;
+        }else{
+            return newval;
+        }
     }
 
-    var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "green", luminosity: "dark"});  // https://randomcolor.llllll.li/
+    _link = $m._curryr(_link)(word);
 
-    var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="mm.searchFirstTxt(this)">${firstTxt}</i>
-            <p><i class="createDate">${createDate}</i><i class="btnContext"><<</i>
-            <div class="txt" style="font-size:${userInfo.data ? userInfo.data.fontSize : "18px"};">${txt}</div></p>${removeBtn}${editBtn}`;
+    return $m._go(
+        str.split("\n"),
+        $m._map(val => $m._go(
+                val.split(" "),
+                $m._map(_link),
+                $m._join("&nbsp;")
+            )),
+        $m._join("<br/>")
+    );
+}
 
-    var li = `<li id="${key}" class="collection-item avatar">${liChild}</li>`;
-    var html = {};
-    html.li = li;
-    html.liChild = liChild;
-    return html;
+
+
+function inPlaceMemo(){
+    // 왼쪽으로 이동된 row들 제자리로 잡아두기
+    _.go(
+        $m("#list li").doms,
+        _.filter(v => $m(v).css("left") === "-100px"),
+        _.each(v => $(v).animate({left: "0px"}, 300, () => $m("#"+v.id + " .btnContext").text("<<"))
+        )
+    );
+}
+
+
+function onChildAdded(data) {
+    inPlaceMemo();
+    memoList.push(data);
+    var curDate = Date.now();
+    var createDate = data.val().createDate;
+    var diff = curDate - createDate;
+    //console.log(diff);
+    if (diff < 1000) {// 방금 새로 등록한 글인 경우만
+        addItem(data.key, data.val(), "append");
+        if ($m(".state").html() === "") {
+            $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+        } else {
+            $m(".header .title").html(memoList.length + " memos");
+        }
+    }
 }
 
 
 function onChildChanged(data) {
+    inPlaceMemo();
     var key = data.key;
     var memoData = data.val();
-    var html = getMemoHtml(key, memoData);
-    $m("#" + key).html(html.liChild);
-    $("#" + key).animate({left: "0px"}, 300);
+
+    var idx = $m._findIndex(mm.memoList, o => o.key === key);
+    mm.memoList.splice(idx, 1, data);
+
+    var vm_memo = $m._find(app.memos, o => o.key === key);
+    vm_memo.createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
+    vm_memo.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
+    vm_memo.txt = _br_nbsp_link(memoData.txt);
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
-    setContextBtnEvent($("#" + key + " .btnContext"));
-    //window.scrollTo("", $m("#"+key).dom.offsetTop + $m("#list").dom.offsetTop);   // .dialog 의 top를 미리 옮겨놓았기 때문에 불필요
-
+    Vue.nextTick(function(){
+        setContextBtnEvent($("#" + key + " .btnContext"));
+    });
 }
 
 function onChildRemoved(data) {
-    var key = data.key;
-    $m("#" + key).remove();
+    inPlaceMemo();
+    const key = data.key;
+    app.memos.splice(_.findIndex(app.memos, o => o.key === key), 1);
+    //$m("#" + key).remove();
     memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
-    $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
 }
 
 
 function setHeader() {
-    if (userInfo != null) {
-        $m("#nickname").val(userInfo.data.nickname);
-        $m("#fontSize").val(userInfo.data.fontSize.replace("px", ""));
-        $m("#iconColor").val(userInfo.data.iconColor);
-        mm.iconColor(userInfo.data.iconColor)
+    if (userInfo) {
+        //$m("#nickname").val(app.user.nickname);
+        $m.val("#nickname", app.user.nickname);
+        //$m("#fontSize").val(app.user.fontSize.replace("px", ""));
+        $m.val("#fontSize", app.user.fontSize.replace("px", ""));
+        //$m("#iconColor").val(app.user.iconColor);
+        $m.val("#iconColor", app.user.iconColor);
+        mm.iconColor(app.user.iconColor)
     } else {
-        $m(".header .title").html("minimemo");
+        //$m(".header .title").html("minimemo");
+        $m.html(".header .title", "minimemo");
     }
 }
 
 
-function setContextBtnEvent(contextBtn) {
-    contextBtn.bind("click", function () {
-        if (contextBtn.text() == "<<") {
-            contextBtn.parent().parent().animate({left: "-100px"}, 300, function () {
-                contextBtn.text(">>");
-            });
+function setContextBtnEvent(btn) {
+    btn.bind("click", function () {
+        if (btn.text() == "<<") {
+            btn.parent().parent().animate({left: "-100px"}, 300, () => btn.text(">>"));
         } else {
-            contextBtn.parent().parent().animate({left: "0px"}, 300, function () {
-                contextBtn.text("<<");
-            });
+            btn.parent().parent().animate({left: "0px"}, 300, () => btn.text("<<"));
         }
     });
 }
@@ -218,34 +244,18 @@ mm.signOut = function () {
 mm.searchFirstTxt = function (obj) {
     //var firstTxt = event.target.innerText;
     var firstTxt = obj.innerText;
-    memoRef.once("value").then(function (snapshot) {
-        $m("#list").html("");
-        var reg = new RegExp(firstTxt, "i");
-        var memoObj = snapshot.val();
 
-        $m._each(memoObj, function(val,key,list){
-            var res = reg.exec(val.txt);
-            if (res !== null && res.index == 0) {
-                addItem(key, val);
-            }
-        });
-/*
-
-        for (var key in memoObj) {
-            var res = reg.exec(memoObj[key].txt);
-            if (res !== null && res.index == 0) {
-                addItem(key, memoObj[key]);
-            }
+    app.memos = [];
+    var reg = new RegExp(firstTxt, "i");
+    $m._each(mm.memoList, function(memo){
+        var res = reg.exec(memo.val().txt);
+        if (res !== null && res.index == 0) {
+            addItem(memo.key, memo.val(), "append", firstTxt);
         }
-*/
-
-        $m(".header .title").html(memoList.length + " memos");
-        $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$m("#list li").length} results`);
-        // 매칭단어 하이라이트닝
-        $m(".txt").each(function (val, key, arr) {
-            val.innerHTML = val.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
-        });
     });
+
+    $m(".header .title").html(memoList.length + " memos");
+    $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> 's ${app.memos.length} results`);
 }
 
 function setShortcut(){
@@ -253,9 +263,21 @@ function setShortcut(){
     $shortcut.add("Alt+W", function () {
         mm.writeMemo();
     });
+    $shortcut.add("Meta+W", function () {
+        mm.writeMemo();     // 이게 안 잡히네.. ㅠ
+    });
     $shortcut.add("Alt+S", function () {
         mm.searchClick();
     });
+    $shortcut.add("Meta+S", function () {
+        mm.searchClick();
+    });
+
+}
+
+
+function randomcolor(color){
+    return $randomcolor({hue: color || "all", luminosity: "dark"});
 }
 
 function login(){
@@ -271,28 +293,19 @@ function login(){
             var userRef = firebase.database().ref("users/" + userInfo.uid);
             userRef.once('value').then(function (snapshot) {
                 //timelog("사용자 정보 로드 후");
-                if (snapshot.val() != null) {
-                    userInfo.data = snapshot.val();
+                if (snapshot.val()) {
+                    app.user = JSON.parse(JSON.stringify(snapshot.val()));
                     setHeader();
-                    $m("#list li .circle").each(function(val, key, arr){
-                        var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "all", luminosity: "dark"});  // https://randomcolor.llllll.li/
-                        $m(val).css("background-color", color);
-                    });
-                    $m("#list li .txt").each(function(val, key, arr){
-                        $m(val).css("font-size", userInfo.data.fontSize);
-                    });
-
+                    $m._each($m("#list li .circle").doms, _($m.css, _, "background-color", randomcolor(app.user.iconColor)));
+                    $m._each($m("#list li .txt").doms, _($m.css, _, "font-size", app.user.fontSize));
                 } else {// 신규 로그인 경우
-                    var userData = {
+                    app.user = {
                         fontSize: "18px",
                         iconColor: "green",
                         email: userInfo.email,
                         nickname: userInfo.email.split("@")[0]
                     };
-                    userRef.set(userData, function () {
-                        userInfo.data = userData;
-                        setHeader();
-                    });
+                    userRef.set(app.user, setHeader);
                 }
                 initMemoList(userInfo.uid);
             });
@@ -333,45 +346,33 @@ function conOff () {
 }
 
 mm.setNickname = function (nickname) {
-    userInfo.data.nickname = nickname;
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+    app.user.nickname = nickname;
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
 };
 
-
 mm.setFontSize = function (size) {
-    userInfo.data.fontSize = size + "px";
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m(".txt").css("font-size", userInfo.data.fontSize);
+    app.user.fontSize = app.user.fontSize = size + "px";
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    //$m(".txt").css("font-size", app.user.fontSize);
+    $m.css(".txt", "font-size", app.user.fontSize);
 };
 
 mm.setIconColor = function (color) {
-    userInfo.data.iconColor = color;
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
+    app.user.iconColor = color;
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
     mm.iconColor(color);
 };
 
 mm.iconColor = function(color){
-    $m("#list i.circle").each(function (val, key, arr) {
-        $m(val).css("background-color"
-            , $randomcolor({hue: color, luminosity: "dark"})
-        );
-    });
+    $m._each($m("#list i.circle").doms, _($m.css, _, "background-color", randomcolor(color)))
 
-    $m(".header").css("background-color"
-        , $randomcolor({hue: color, luminosity: "dark"})
-    );
+    $m._each([".header", "#topNavi", "#btn_search", "#btn_cancel"], _($m.css, _, "background-color", randomcolor(color)))
 
-    $m("#topNavi").css("background-color"
-        , $randomcolor({hue: color, luminosity: "dark"})
-    );
+    var color2 = randomcolor(color);
+    $m.css("#addBtn", "background-color", color2);
+    $m.css($m("#addBtn").parent(), "background-color", color2);
 
-    var tmp = $randomcolor({hue: color, luminosity: "dark"});
-    $m("#addBtn").css("background-color", tmp);
-    $m($m("#addBtn").parent()).css("background-color", tmp);
-
-    $m("#btn_search").css("background-color", $randomcolor({hue: color, luminosity: "dark"}));
-    $m("#btn_cancel").css("background-color", $randomcolor({hue: color, luminosity: "dark"}));
 }
 
 
@@ -386,9 +387,9 @@ mm.bodyScroll = function () {
         var end = memoList.length - $m("#list li").length;
         var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
         var nextList = memoList.slice(start, end).reverse();
-        nextList.forEach(function (x, i) {
-            addItem(x.key, x.val(), "append");
-        });
+
+        $m._each(nextList, x => addItem(x.key, x.val()))
+
         $nprogress.done();
     }
 };
@@ -401,7 +402,8 @@ mm.titleClick = function () {
     if (userInfo) {
         showMemoList(userInfo.uid);
     } else {
-        firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+        location.href = "/login.html";
     }
 };
 
@@ -410,9 +412,8 @@ mm.init = function () {
     $nprogress.start();  // https://github.com/rstacruz/nprogress
     login();
     setShortcut();
-
     firebase.database().ref(".info/connected").on("value", function (snap) {
-        if (snap.val() === true) {
+        if (snap.val()) {
             conOn();
         } else {
             conOff();
@@ -427,7 +428,8 @@ mm.listClick = function () {
 
 
 mm.cancelWrite = function () {
-    $m(".dialog").css("display", "none");
+    //$m(".dialog").css("display", "none");
+    $m.css(".dialog", "display", "none");
 };
 
 
@@ -445,25 +447,16 @@ mm.searchMemo = function () {
 
     $m(".search").css("display", "none");
 
-    memoRef.once("value").then(function (snapshot) {
-        $m("#list").html("");
-        var txts = [];
 
-        $m._each(snapshot.val(), function(val, key){
-            if (val.txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
-                addItem(key, val);
-                txts.push(val.txt);
-            }
-        });
-
-        $m(".header .title").html(memoList.length + " memos");
-        $m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
-
-        $m(".txt").each(function (val, key, arr) {
-            var oriTxt = txts[txts.length-1-key];
-            $m(val).html(_br_nbsp_link(oriTxt, word));
-        });
+    app.memos = [];
+    $m._each(mm.memoList, function(memo){
+        if (memo.val().txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
+            addItem(memo.key, memo.val(), "append", word);
+        }
     });
+
+    $m.html(".header .title", memoList.length + " memos")
+    $m.html(".header .state", `> <span style="font-style:italic;">${word}</span> 's ${app.memos.length} results`)
 };
 
 
