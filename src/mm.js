@@ -8,9 +8,6 @@ const Vue = require("../ext/vue.js");
 const R = require('../ext/ramda.js');
 const _ = require('../ext/partial.js');
 
-
-
-
 var mm = {};
 module.exports = mm;
 
@@ -40,7 +37,7 @@ function initMemoList(uid) {
     memoRef.on("child_removed", onChildRemoved);
     memoRef.once('value', function(snapshot) {
         //timelog("전체메모 조회 후");
-        $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+        $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
         $nprogress.done();
     });
 }
@@ -50,7 +47,8 @@ function addItem(key, memoData, how) {
         key: key,
         createDate : (new Date(memoData.createDate)).toString().substr(4, 17),
         firstTxt : memoData.txt.substr(0, 1).toUpperCase(),
-        txt : _br_nbsp_link(memoData.txt),
+        //txt : _br_nbsp_link(memoData.txt),
+        txt : _format_txt(memoData.txt),
     }
 
     if(how === "append"){
@@ -86,32 +84,35 @@ function _br_nbsp_link(str, word){
     }).join("<br/>");   // 새줄문자 <br/> 치환
 }
 
-function getMemoHtml(key, memoData) {
-    var txt = memoData.txt;
-    var createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
-    var firstTxt = txt.substr(0, 1).toUpperCase();
 
-    txt = _br_nbsp_link(txt);
+function _format_txt(str, word){
 
-    var removeBtn = "";
-    var editBtn = "";
-    if (typeof userInfo != null) {// 내가 작성한 글인 경우만 수정/삭제버튼이 표시
-        removeBtn = `<i id="btn_delete" onclick='mm.removeMemo("${key}")' class="material-icons">delete</i>`;
-        editBtn = `<i id="btn_edit" onclick='mm.editMemo("${key}")' class="material-icons">edit</i>`;
+     var _link = (val, word) => {
+        var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
+        if(word){ // 매칭단어 하이라이트
+            var reg = new RegExp("("+word+")", "gi");
+            newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
+        }
+        if(val.indexOf("http://") == 0 || val.indexOf("https://") == 0){
+            return `<a href="${val}" target="_blank">${newval}</a>`;
+        }else{
+            return newval;
+        }
     }
 
-    var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "green", luminosity: "dark"});  // https://randomcolor.llllll.li/
+    _link = $m._curryr(_link)(word);
 
-    var liChild = `<i class="material-icons circle" style="background-color:${color};" onclick="mm.searchFirstTxt(this)">${firstTxt}</i>
-            <p><i class="createDate">${createDate}</i><i class="btnContext"><<</i>
-            <div class="txt" style="font-size:${userInfo.data ? userInfo.data.fontSize : "18px"};">${txt}</div></p>${removeBtn}${editBtn}`;
-
-    var li = `<li id="${key}" class="collection-item avatar">${liChild}</li>`;
-    var html = {};
-    html.li = li;
-    html.liChild = liChild;
-    return html;
+    return $m._go(
+        str.split("\n"),
+        $m._map(val => $m._go(
+                val.split(" "),
+                $m._map(_link),
+                $m._join("&nbsp;")
+            )),
+        $m._join("<br/>")
+    );
 }
+
 
 
 function inPlaceMemo(){
@@ -135,7 +136,7 @@ function onChildAdded(data) {
     if (diff < 1000) {// 방금 새로 등록한 글인 경우만
         addItem(data.key, data.val(), "append");
         if ($m(".state").html() === "") {
-            $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+            $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
         } else {
             $m(".header .title").html(memoList.length + " memos");
         }
@@ -170,18 +171,22 @@ function onChildRemoved(data) {
     app.memos.splice(_.findIndex(app.memos, o => o.key === key), 1);
     //$m("#" + key).remove();
     memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
-    $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
 }
 
 
 function setHeader() {
-    if (userInfo != null) {
-        $m("#nickname").val(userInfo.data.nickname);
-        $m("#fontSize").val(userInfo.data.fontSize.replace("px", ""));
-        $m("#iconColor").val(userInfo.data.iconColor);
-        mm.iconColor(userInfo.data.iconColor)
+    if (userInfo) {
+        //$m("#nickname").val(app.user.nickname);
+        $m.val("#nickname", app.user.nickname);
+        //$m("#fontSize").val(app.user.fontSize.replace("px", ""));
+        $m.val("#fontSize", app.user.fontSize.replace("px", ""));
+        //$m("#iconColor").val(app.user.iconColor);
+        $m.val("#iconColor", app.user.iconColor);
+        mm.iconColor(app.user.iconColor)
     } else {
-        $m(".header .title").html("minimemo");
+        //$m(".header .title").html("minimemo");
+        $m.html(".header .title", "minimemo");
     }
 }
 
@@ -268,9 +273,16 @@ function setShortcut(){
     $shortcut.add("Alt+W", function () {
         mm.writeMemo();
     });
+    $shortcut.add("Meta+W", function () {
+        mm.writeMemo();     // 이게 안 잡히네.. ㅠ
+    });
     $shortcut.add("Alt+S", function () {
         mm.searchClick();
     });
+    $shortcut.add("Meta+S", function () {
+        mm.searchClick();
+    });
+
 }
 
 function login(){
@@ -286,28 +298,26 @@ function login(){
             var userRef = firebase.database().ref("users/" + userInfo.uid);
             userRef.once('value').then(function (snapshot) {
                 //timelog("사용자 정보 로드 후");
-                if (snapshot.val() != null) {
-                    userInfo.data = snapshot.val();
-                    app.user = JSON.parse(JSON.stringify(userInfo.data));
+                if (snapshot.val()) {
+                    app.user = JSON.parse(JSON.stringify(snapshot.val()));
 
                     setHeader();
                     $m("#list li .circle").each(function(val, key, arr){
-                        var color = $randomcolor({hue: userInfo.data ? userInfo.data.iconColor : "all", luminosity: "dark"});  // https://randomcolor.llllll.li/
+                        var color = $randomcolor({hue: app.user.iconColor || "all", luminosity: "dark"});  // https://randomcolor.llllll.li/
                         $m(val).css("background-color", color);
                     });
                     $m("#list li .txt").each(function(val, key, arr){
-                        $m(val).css("font-size", userInfo.data.fontSize);
+                        $m(val).css("font-size", app.user.fontSize);
                     });
 
                 } else {// 신규 로그인 경우
-                    var userData = {
+                    app.user = {
                         fontSize: "18px",
                         iconColor: "green",
                         email: userInfo.email,
                         nickname: userInfo.email.split("@")[0]
                     };
-                    userRef.set(userData, function () {
-                        userInfo.data = userData;
+                    userRef.set(app.user, function () {
                         setHeader();
                     });
                 }
@@ -350,21 +360,21 @@ function conOff () {
 }
 
 mm.setNickname = function (nickname) {
-    userInfo.data.nickname = nickname;
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
+    app.user.nickname = nickname;
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
 };
 
-
 mm.setFontSize = function (size) {
-    app.user.fontSize = userInfo.data.fontSize = size + "px";
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m(".txt").css("font-size", userInfo.data.fontSize);
+    app.user.fontSize = app.user.fontSize = size + "px";
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    //$m(".txt").css("font-size", app.user.fontSize);
+    $m.css(".txt", "font-size", app.user.fontSize);
 };
 
 mm.setIconColor = function (color) {
-    userInfo.data.iconColor = color;
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
+    app.user.iconColor = color;
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
     mm.iconColor(color);
 };
 
@@ -379,13 +389,27 @@ mm.iconColor = function(color){
     */
 
     // R.forEach(setBgColor, $m("#list i.circle").doms);    // 이거는 안됨, https://min9nim.github.io/frontend/2018/03/31/ramdajs-forEach.html
-    R.forEach(val => setBgColor(val), $m("#list i.circle").doms);
+    //R.forEach(val => setBgColor(val), $m("#list i.circle").doms);
+    $m._each($m("#list i.circle").doms, ele => setBgColor(ele))
 
     // 헤더 및 버튼들
-    R.forEach(setBgColor, [".header", "#topNavi", "#btn_search", "#btn_cancel"]);
+    //R.forEach(setBgColor, [".header", "#topNavi", "#btn_search", "#btn_cancel"]);
+    $m._each([".header", "#topNavi", "#btn_search", "#btn_cancel"], selector => setBgColor(selector))
+
+    /*
     var tmp = $randomcolor({hue: color, luminosity: "dark"});
     setBgColor("#addBtn", tmp);
     setBgColor($m("#addBtn").parent(), tmp);
+    */
+
+    $m._go(
+        $randomcolor({hue: color, luminosity: "dark"}),
+        color => {
+            setBgColor("#addBtn", color);
+            setBgColor($m("#addBtn").parent(), color);
+        }
+    );
+
 }
 
 
@@ -447,7 +471,8 @@ mm.listClick = function () {
 
 
 mm.cancelWrite = function () {
-    $m(".dialog").css("display", "none");
+    //$m(".dialog").css("display", "none");
+    $m.css(".dialog", "display", "none");
 };
 
 
@@ -476,20 +501,23 @@ mm.searchMemo = function () {
             }
         });
 
-        $m(".header .title").html(memoList.length + " memos");
-        $m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
+        //$m(".header .title").html(memoList.length + " memos");
+        $m.html(".header .title", memoList.length + " memos")
+        //$m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
+        $m.html(".header .state", `> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`)
 /*
         $m(".txt").each(function (val, key, arr) {
             var oriTxt = txts[txts.length-1-key];
             $m(val).html(_br_nbsp_link(oriTxt, word));
         });
 */
-
-        _.each($m(".txt").doms, (val, key) => _.go(
+        _.each(
+            $m(".txt").doms, (ele, key) => _.go(
                 _.mr(txts[txts.length-1-key], word),
                 _br_nbsp_link,
-                _($m.eleHtml, val)
-            ));
+                $m._curry($m.html)(ele)
+            )
+        );
     });
 };
 

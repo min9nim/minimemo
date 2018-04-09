@@ -1,7 +1,5 @@
-
 //http://www.mojavelinux.com/articles/javascript_hashes.html
-function HashTable(obj)
-{
+function HashTable(obj) {
     this.length = 0;
     this.items = {};
     for (var p in obj) {
@@ -11,13 +9,11 @@ function HashTable(obj)
         }
     }
 
-    this.setItem = function(key, value)
-    {
+    this.setItem = function(key, value) {
         var previous = undefined;
         if (this.hasItem(key)) {
             previous = this.items[key];
-        }
-        else {
+        } else {
             this.length++;
         }
         this.items[key] = value;
@@ -28,26 +24,22 @@ function HashTable(obj)
         return this.hasItem(key) ? this.items[key] : undefined;
     }
 
-    this.hasItem = function(key)
-    {
+    this.hasItem = function(key) {
         return this.items.hasOwnProperty(key);
     }
 
-    this.removeItem = function(key)
-    {
+    this.removeItem = function(key) {
         if (this.hasItem(key)) {
             previous = this.items[key];
             this.length--;
             delete this.items[key];
             return previous;
-        }
-        else {
+        } else {
             return undefined;
         }
     }
 
-    this.keys = function()
-    {
+    this.keys = function() {
         var keys = [];
         for (var k in this.items) {
             if (this.hasItem(k)) {
@@ -57,8 +49,7 @@ function HashTable(obj)
         return keys;
     }
 
-    this.values = function()
-    {
+    this.values = function() {
         var values = [];
         for (var k in this.items) {
             if (this.hasItem(k)) {
@@ -69,8 +60,7 @@ function HashTable(obj)
     }
 
 
-    this.getArray = function()
-    {
+    this.getArray = function() {
         var arr = [];
         for (var k in this.items) {
             if (this.hasItem(k)) {
@@ -91,8 +81,7 @@ function HashTable(obj)
         }
     }
 
-    this.clear = function()
-    {
+    this.clear = function() {
         this.items = {}
         this.length = 0;
     }
@@ -100,70 +89,70 @@ function HashTable(obj)
 
 
 
-var $m = function(sel){
+var $m = function(sel) {
     return new $m.fn.init(sel);
 };
 
 module.exports = $m;
 
 $m.fn = {
-    init :  function(sel){
-        if(typeof sel == "string"){
+    init: function(sel) {
+        if (typeof sel == "string") {
             this.sel = sel;
             this.doms = document.querySelectorAll(sel);
             this.length = this.doms.length;
-        }else{// dom이 직접 들어올 경우
+        } else { // dom이 직접 들어올 경우
             this.doms = [sel];
             this.length = 1;
         }
-        if(this.length === 1){
+        if (this.length === 1) {
             this.dom = this.doms[0];
         }
     },
 
-    html : function (html) {
-        if(this.length == 0) return;
+    html: function(html) {
+        if (this.length == 0) return;
 
-        if(html === undefined){
+        if (html === undefined) {
             return this.doms[0].innerHTML;
         }
 
-        $m._each(this.doms, function (dom) {
+        $m._each(this.doms, function(dom) {
             dom.innerHTML = html;
         });
 
         return this;
     },
 
-    text : function (text) {
-        if(this.length == 0) return;
+    text: function(text) {
+        if (this.length == 0) return;
 
-        if(text === undefined){
+        if (text === undefined) {
             return this.doms[0].textContent;
         }
 
-        $m._each(this.doms, function (dom) {
+        $m._each(this.doms, function(dom) {
             dom.textContent = text;
         });
 
         return this;
     },
 
-    css : function(name, value) {
-        if(this.length == 0) return;
+    css: function(name, value) {
+        if (this.length == 0) return;
 
-        if(value === undefined){
+        if (value === undefined) {
             return this.doms[0].style[name];
         }
 
-        if(typeof value === "number"){
+        if (typeof value === "number") {
             var arr = ["left", "top", "right", "bottom", "width", "height"];
-            if(arr.indexOf(name) >= 0){
+            if (arr.indexOf(name) >= 0) {
                 value = value + "px";
             }
         }
 
-        $m._each(this.doms, function(dom){
+        $m._each(this.doms, function(dom) {
             dom.style[name] = value;
         });
 
@@ -171,64 +160,67 @@ $m.fn = {
     },
 
 
-    position : function() {
-        if(this.length == 0) return;
+    position: function() {
+        if (this.length == 0) return;
 
         var top = this.doms[0].style["top"];
-        top = Number(top.substring(0, top.length-2));
+        top = Number(top.substring(0, top.length - 2));
 
         var left = this.doms[0].style["left"];
-        left = Number(left.substring(0, left.length-2));
+        left = Number(left.substring(0, left.length - 2));
 
-        return {"top" : top, "left" : left};
+        return {
+            "top": top,
+            "left": left
+        };
     },
 
-    parent : function(selector, ele){
-        if(this.length === 0) return;
+    parent: function(selector, ele) {
+        if (this.length === 0) return;
 
-        if(ele === undefined){
+        if (ele === undefined) {
             ele = this.doms[0];
-        }else{
-            if(ele.tagName === "BODY") return;
+        } else {
+            if (ele.tagName === "BODY") return;
         }
 
-        if(selector === undefined){
+        if (selector === undefined) {
             return ele.parentNode;
         }
 
-        if(selector[0] === "#"){
+        if (selector[0] === "#") {
             // id로 찾기
-        }else if(selector[0] === "."){
+        } else if (selector[0] === ".") {
             // 클래스로 찾기
-        }else{
+        } else {
             // 태그로 찾기
-            if(ele.parentNode.tagName === selector.toUpperCase()){
+            if (ele.parentNode.tagName === selector.toUpperCase()) {
                 return ele.parentNode;
-            }else{
+            } else {
                 return this.parent(selector, ele.parentNode);
             }
         }
     },
 
 
-    animate : function(){
+    animate: function() {
 
     },
 
-    bind : function(){
+    bind: function() {
 
     },
 
 
 
-    attr : function(name, value) {
-        if(this.length == 0) return;
+    attr: function(name, value) {
+        if (this.length == 0) return;
 
-        if(value === undefined){
+        if (value === undefined) {
             return this.doms[0].getAttribute(name);
         }
 
-        $m._each(this.doms, function(dom){
+        $m._each(this.doms, function(dom) {
             dom.setAttribute(name, value);
         });
 
@@ -236,111 +228,111 @@ $m.fn = {
     },
 
 
-    removeAttr : function(name) {
-        if(this.length == 0) return;
+    removeAttr: function(name) {
+        if (this.length == 0) return;
 
-        $m._each(this.doms, function(dom){
+        $m._each(this.doms, function(dom) {
             dom.removeAttribute(name);
         });
 
         return this;
     },
 
-        addClass : function(name) {
-            $m._each(this.doms, function(dom){
-                var cls = dom.getAttribute("class");
-                if(cls === null){
-                    cls = name;
-                }else{
-                    cls = cls + " " + name;
-                }
-                dom.setAttribute("class", cls);
-            });
+    addClass: function(name) {
+        $m._each(this.doms, function(dom) {
+            var cls = dom.getAttribute("class");
+            if (cls === null) {
+                cls = name;
+            } else {
+                cls = cls + " " + name;
+            }
+            dom.setAttribute("class", cls);
+        });
 
         return this;
     },
 
 
-        removeClass : function(name) {
-            $m._each(this.doms, function(dom){
-                var cls = dom.getAttribute("class");
-                if(cls === null){
-                    return this;
-                }
-                var arr = cls.split(" ");
-                var idx = arr.indexOf(name);
-                if(idx < 0){
-                    return;
-                }
-                arr.splice(idx, 1);
-                dom.setAttribute("class", arr.join(" "));
-            });
+    removeClass: function(name) {
+        $m._each(this.doms, function(dom) {
+            var cls = dom.getAttribute("class");
+            if (cls === null) {
+                return this;
+            }
+            var arr = cls.split(" ");
+            var idx = arr.indexOf(name);
+            if (idx < 0) {
+                return;
+            }
+            arr.splice(idx, 1);
+            dom.setAttribute("class", arr.join(" "));
+        });
 
         return this;
     },
 
-    each : function(func) {
-        $m._each(this.doms, function(val, key, arr){
+    each: function(func) {
+        $m._each(this.doms, function(val, key, arr) {
             func.call(val, val, key, arr);
         });
 
         return this;
     },
 
-    remove : function(){
-        $m._each(this.doms, function(dom){
-            dom.parentNode.removeChild( dom );
+    remove: function() {
+        $m._each(this.doms, function(dom) {
+            dom.parentNode.removeChild(dom);
         });
     },
 
-    append : function(elem){
-        $m._each(this.doms, function(dom){
-            if ( dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9 ) {
+    append: function(elem) {
+        $m._each(this.doms, function(dom) {
+            if (dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9) {
                 dom.appendChild($m.clone(elem));
             }
         });
         return this;
     },
 
-    prepend : function(elem){
-        $m._each(this.doms, function(dom){
-            if ( dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9 ) {
+    prepend: function(elem) {
+        $m._each(this.doms, function(dom) {
+            if (dom.nodeType === 1 || dom.nodeType === 11 || dom.nodeType === 9) {
                 dom.insertBefore($m.clone(elem), dom.firstChild);
             }
         });
         return this;
     },
 
-    show : function(){
-        $m._each(this.doms, function(dom){
+    show: function() {
+        $m._each(this.doms, function(dom) {
             dom.style.display = "block";
         });
         return this;
     },
 
-    hide : function(){
-        $m._each(this.doms, function(dom){
+    hide: function() {
+        $m._each(this.doms, function(dom) {
             dom.style.display = "none";
         });
         return this;
     },
 
-    val : function(value){
-        if(this.length == 0) return;
+    val: function(value) {
+        if (this.length == 0) return;
 
-        if(value === undefined){
+        if (value === undefined) {
             return this.doms[0].value;
         }
 
-        $m._each(this.doms, function(dom){
+        $m._each(this.doms, function(dom) {
             dom.value = value;
         });
 
         return this;
     },
 
-    focus : function(){
-        if(this.length == 0) return;
+    focus: function() {
+        if (this.length == 0) return;
 
         this.doms[0].focus();
     }
@@ -351,104 +343,116 @@ $m.fn.init.prototype = $m.fn;
 
 
 // 유틸
-$m.clone = function(elem){
+$m.clone = function(elem) {
     var newNode;
-    if(typeof elem === "string"){
+    if (typeof elem === "string") {
         var tmp = document.createElement("div");
         tmp.innerHTML = elem;
         newNode = tmp.firstChild;
-    }else{
+    } else {
         newNode = elem.cloneNode(true);
     }
     return newNode;
 };
 
-$m.scrollTo = function(x, y){
-    window.scrollTo(x,y);
+$m.scrollTo = function(x, y) {
+    return window.scrollTo(x, y);
 };
 
 
-$m.eleHtml = function(selector, html){
-    $m(selector).html(html);
+// 함수형 프로그래밍을 위한 함수 중심 API
+$m.html = function(selector, html) {
+    return $m(selector).html(html);
 }
 
+$m.css = function(selector, name, value) {
+    return $m(selector).css(name, value);
+}
+
+$m.val = function(selector, value) {
+    return $m(selector).val(value);
+}
 
 // 함수형 프로그래밍 라이브러리
-$m._curry = function(fn){
-    return function(a,b){
-        return arguments.length === 2 ? fn(a,b) : b => fn(a,b);
+$m._curry = function(fn) {
+    return function(a, b) {
+        return arguments.length === 2 ? fn(a, b) : b => fn(a, b);
     }
 };
 
-$m._curryr = function(fn){
-    return function(a,b){
-        return arguments.length === 2 ? fn(a,b) : b => fn(b,a);
+$m._curryr = function(fn) {
+    return function(a, b) {
+        return arguments.length === 2 ? fn(a, b) : b => fn(b, a);
     }
 };
 
 $m._each = $m._curryr(function(list, fn) {
-    if(typeof list !==  "object" || !list){
+    if (typeof list !== "object" || !list) {
         return [];
     }
     var keys = Object.keys(list);
-    for(var i=0; i<keys.length; i++){
+    for (var i = 0; i < keys.length; i++) {
         fn(list[keys[i]], keys[i], list);
     }
     return list;
 });
 
-$m._map = $m._curryr(function(list, mapper){
+$m._map = $m._curryr(function(list, mapper) {
     var res = [];
-    $m._each(list, function(val, key, list){
+    $m._each(list, function(val, key, list) {
         res.push(mapper(val, key, list));
     });
     return res;
 });
 
-$m._filter = $m._curryr(function(list, predi){
+$m._filter = $m._curryr(function(list, predi) {
     var res = [];
-    $m._each(list, function(val, key, list){
-        if(predi(val, key, list)){
+    $m._each(list, function(val, key, list) {
+        if (predi(val, key, list)) {
             res.push(val);
         }
     });
     return res;
 });
 
-$m._reduce = function(list, iter, init){
+$m._reduce = function(list, iter, init) {
     var res = init;
-    if(init === undefined){
-        res = list && list[0];      // null 체크
+    if (init === undefined) {
+        res = list && list[0]; // null 체크
         list = list && list.slice(1);
     }
-    $m._each(list, function(val, key, list){
-            res = iter(val, res, key, list);
+    $m._each(list, function(val, key, list) {
+        res = iter(val, res, key, list);
     });
     return res;
 };
 
-$m._slice = function(list, begin, end){
-    if(typeof arguments[0] === "number"){
+$m._slice = function(list, begin, end) {
+    if (typeof arguments[0] === "number") {
         var begin = arguments[0];
         var end = arguments[1];
-        return function(list){
+        return function(list) {
             return Array.prototype.slice.call(list, begin, end);
         };
-    }else{
+    } else {
         return Array.prototype.slice.call(list, begin, end);
     }
 };
 
-$m._go = function () {
+$m._join = $m._curryr((list, delim) => Array.prototype.join.call(list, delim));
+
+$m._split = $m._curryr((str, delim) => String.prototype.split.call(str, delim));
+
+$m._go = function() {
     var args = arguments;
     var fns = $m._slice(args, 1);
     return $m._pipe(fns)(args[0]);
 };
 
-$m._pipe = function () {
+$m._pipe = function() {
     var fns = Array.isArray(arguments[0]) ? arguments[0] : arguments;
-    return function(){
-        return $m._reduce(fns, function(val, res, key, list){
+    return function() {
+        return $m._reduce(fns, function(val, res, key, list) {
             return val(res);
         }, arguments[0]);
     }

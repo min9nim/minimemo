@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 8);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -92,61 +92,30 @@ module.exports = g;
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-var apply = Function.prototype.apply;
-
-// DOM APIs, for completeness
-
-exports.setTimeout = function() {
-  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+module.exports = function(module) {
+	if(!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
 };
-exports.setInterval = function() {
-  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-};
-exports.clearTimeout =
-exports.clearInterval = function(timeout) {
-  if (timeout) {
-    timeout.close();
-  }
-};
-
-function Timeout(id, clearFn) {
-  this._id = id;
-  this._clearFn = clearFn;
-}
-Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-Timeout.prototype.close = function() {
-  this._clearFn.call(window, this._id);
-};
-
-// Does not start the time, just sets up the members needed.
-exports.enroll = function(item, msecs) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = msecs;
-};
-
-exports.unenroll = function(item) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = -1;
-};
-
-exports._unrefActive = exports.active = function(item) {
-  clearTimeout(item._idleTimeoutId);
-
-  var msecs = item._idleTimeout;
-  if (msecs >= 0) {
-    item._idleTimeoutId = setTimeout(function onTimeout() {
-      if (item._onTimeout)
-        item._onTimeout();
-    }, msecs);
-  }
-};
-
-// setimmediate attaches itself to the global object
-__webpack_require__(6);
-exports.setImmediate = setImmediate;
-exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
@@ -154,665 +123,438 @@ exports.clearImmediate = clearImmediate;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _mm = __webpack_require__(3);
+// randomColor by David Merfield under the CC0 license
+// https://github.com/davidmerfield/randomColor/
 
-var _mm2 = _interopRequireDefault(_mm);
+;(function (root, factory) {
 
-var _vue = __webpack_require__(5);
+  // Support CommonJS
+  if (( false ? 'undefined' : _typeof(exports)) === 'object') {
+    var randomColor = factory();
 
-var _vue2 = _interopRequireDefault(_vue);
+    // Support NodeJS & Component, which allow module.exports to be a function
+    if (( false ? 'undefined' : _typeof(module)) === 'object' && module && module.exports) {
+      exports = module.exports = randomColor;
+    }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+    // Support CommonJS 1.1.1 spec
+    exports.randomColor = randomColor;
 
-//var mm = require("./mm.js");
-var $randomcolor = __webpack_require__(8);
+    // Support AMD
+  } else if (true) {
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
-window.mm = _mm2.default;
+    // Support vanilla script loading
+  } else {
+    root.randomColor = factory();
+  }
+})(undefined, function () {
 
-window.app = new _vue2.default({
-    el: '#app',
-    data: {
-        title: "minimemo is loading..",
-        memos: [],
-        user: {
-            "email": "",
-            "fontSize": "",
-            "iconColor": "",
-            "nickname": ""
-        },
-        mm: _mm2.default
-    },
-    methods: {
-        bgcolor: function bgcolor() {
-            return "background-color:" + $randomcolor({ hue: app.user.iconColor, luminosity: "dark" }) + ";";
+  // Seed to get repeatable colors
+  var seed = null;
+
+  // Shared color dictionary
+  var colorDictionary = {};
+
+  // Populate the color dictionary
+  loadColorBounds();
+
+  var randomColor = function randomColor(options) {
+
+    options = options || {};
+
+    // Check if there is a seed and ensure it's an
+    // integer. Otherwise, reset the seed value.
+    if (options.seed !== undefined && options.seed !== null && options.seed === parseInt(options.seed, 10)) {
+      seed = options.seed;
+
+      // A string was passed as a seed
+    } else if (typeof options.seed === 'string') {
+      seed = stringToInteger(options.seed);
+
+      // Something was passed as a seed but it wasn't an integer or string
+    } else if (options.seed !== undefined && options.seed !== null) {
+      throw new TypeError('The seed value must be an integer or string');
+
+      // No seed, reset the value outside.
+    } else {
+      seed = null;
+    }
+
+    var H, S, B;
+
+    // Check if we need to generate multiple colors
+    if (options.count !== null && options.count !== undefined) {
+
+      var totalColors = options.count,
+          colors = [];
+
+      options.count = null;
+
+      while (totalColors > colors.length) {
+
+        // Since we're generating multiple colors,
+        // incremement the seed. Otherwise we'd just
+        // generate the same color each time...
+        if (seed && options.seed) options.seed += 1;
+
+        colors.push(randomColor(options));
+      }
+
+      options.count = totalColors;
+
+      return colors;
+    }
+
+    // First we pick a hue (H)
+    H = pickHue(options);
+
+    // Then use H to determine saturation (S)
+    S = pickSaturation(H, options);
+
+    // Then use S and H to determine brightness (B).
+    B = pickBrightness(H, S, options);
+
+    // Then we return the HSB color in the desired format
+    return setFormat([H, S, B], options);
+  };
+
+  function pickHue(options) {
+
+    var hueRange = getHueRange(options.hue),
+        hue = randomWithin(hueRange);
+
+    // Instead of storing red as two seperate ranges,
+    // we group them, using negative numbers
+    if (hue < 0) {
+      hue = 360 + hue;
+    }
+
+    return hue;
+  }
+
+  function pickSaturation(hue, options) {
+
+    if (options.hue === 'monochrome') {
+      return 0;
+    }
+
+    if (options.luminosity === 'random') {
+      return randomWithin([0, 100]);
+    }
+
+    var saturationRange = getSaturationRange(hue);
+
+    var sMin = saturationRange[0],
+        sMax = saturationRange[1];
+
+    switch (options.luminosity) {
+
+      case 'bright':
+        sMin = 55;
+        break;
+
+      case 'dark':
+        sMin = sMax - 10;
+        break;
+
+      case 'light':
+        sMax = 55;
+        break;
+    }
+
+    return randomWithin([sMin, sMax]);
+  }
+
+  function pickBrightness(H, S, options) {
+
+    var bMin = getMinimumBrightness(H, S),
+        bMax = 100;
+
+    switch (options.luminosity) {
+
+      case 'dark':
+        bMax = bMin + 20;
+        break;
+
+      case 'light':
+        bMin = (bMax + bMin) / 2;
+        break;
+
+      case 'random':
+        bMin = 0;
+        bMax = 100;
+        break;
+    }
+
+    return randomWithin([bMin, bMax]);
+  }
+
+  function setFormat(hsv, options) {
+
+    switch (options.format) {
+
+      case 'hsvArray':
+        return hsv;
+
+      case 'hslArray':
+        return HSVtoHSL(hsv);
+
+      case 'hsl':
+        var hsl = HSVtoHSL(hsv);
+        return 'hsl(' + hsl[0] + ', ' + hsl[1] + '%, ' + hsl[2] + '%)';
+
+      case 'hsla':
+        var hslColor = HSVtoHSL(hsv);
+        var alpha = options.alpha || Math.random();
+        return 'hsla(' + hslColor[0] + ', ' + hslColor[1] + '%, ' + hslColor[2] + '%, ' + alpha + ')';
+
+      case 'rgbArray':
+        return HSVtoRGB(hsv);
+
+      case 'rgb':
+        var rgb = HSVtoRGB(hsv);
+        return 'rgb(' + rgb.join(', ') + ')';
+
+      case 'rgba':
+        var rgbColor = HSVtoRGB(hsv);
+        var alpha = options.alpha || Math.random();
+        return 'rgba(' + rgbColor.join(', ') + ', ' + alpha + ')';
+
+      default:
+        return HSVtoHex(hsv);
+    }
+  }
+
+  function getMinimumBrightness(H, S) {
+
+    var lowerBounds = getColorInfo(H).lowerBounds;
+
+    for (var i = 0; i < lowerBounds.length - 1; i++) {
+
+      var s1 = lowerBounds[i][0],
+          v1 = lowerBounds[i][1];
+
+      var s2 = lowerBounds[i + 1][0],
+          v2 = lowerBounds[i + 1][1];
+
+      if (S >= s1 && S <= s2) {
+
+        var m = (v2 - v1) / (s2 - s1),
+            b = v1 - m * s1;
+
+        return m * S + b;
+      }
+    }
+
+    return 0;
+  }
+
+  function getHueRange(colorInput) {
+
+    if (typeof parseInt(colorInput) === 'number') {
+
+      var number = parseInt(colorInput);
+
+      if (number < 360 && number > 0) {
+        return [number, number];
+      }
+    }
+
+    if (typeof colorInput === 'string') {
+
+      if (colorDictionary[colorInput]) {
+        var color = colorDictionary[colorInput];
+        if (color.hueRange) {
+          return color.hueRange;
         }
-    },
-    computed: {},
-    watch: {}
+      } else if (colorInput.match(/^#?([0-9A-F]{3}|[0-9A-F]{6})$/i)) {
+        var hue = HexToHSB(colorInput)[0];
+        return [hue, hue];
+      }
+    }
+
+    return [0, 360];
+  }
+
+  function getSaturationRange(hue) {
+    return getColorInfo(hue).saturationRange;
+  }
+
+  function getColorInfo(hue) {
+
+    // Maps red colors to make picking hue easier
+    if (hue >= 334 && hue <= 360) {
+      hue -= 360;
+    }
+
+    for (var colorName in colorDictionary) {
+      var color = colorDictionary[colorName];
+      if (color.hueRange && hue >= color.hueRange[0] && hue <= color.hueRange[1]) {
+        return colorDictionary[colorName];
+      }
+    }return 'Color not found';
+  }
+
+  function randomWithin(range) {
+    if (seed === null) {
+      return Math.floor(range[0] + Math.random() * (range[1] + 1 - range[0]));
+    } else {
+      //Seeded random algorithm from http://indiegamr.com/generate-repeatable-random-numbers-in-js/
+      var max = range[1] || 1;
+      var min = range[0] || 0;
+      seed = (seed * 9301 + 49297) % 233280;
+      var rnd = seed / 233280.0;
+      return Math.floor(min + rnd * (max - min));
+    }
+  }
+
+  function HSVtoHex(hsv) {
+
+    var rgb = HSVtoRGB(hsv);
+
+    function componentToHex(c) {
+      var hex = c.toString(16);
+      return hex.length == 1 ? '0' + hex : hex;
+    }
+
+    var hex = '#' + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
+
+    return hex;
+  }
+
+  function defineColor(name, hueRange, lowerBounds) {
+
+    var sMin = lowerBounds[0][0],
+        sMax = lowerBounds[lowerBounds.length - 1][0],
+        bMin = lowerBounds[lowerBounds.length - 1][1],
+        bMax = lowerBounds[0][1];
+
+    colorDictionary[name] = {
+      hueRange: hueRange,
+      lowerBounds: lowerBounds,
+      saturationRange: [sMin, sMax],
+      brightnessRange: [bMin, bMax]
+    };
+  }
+
+  function loadColorBounds() {
+
+    defineColor('monochrome', null, [[0, 0], [100, 0]]);
+
+    defineColor('red', [-26, 18], [[20, 100], [30, 92], [40, 89], [50, 85], [60, 78], [70, 70], [80, 60], [90, 55], [100, 50]]);
+
+    defineColor('orange', [19, 46], [[20, 100], [30, 93], [40, 88], [50, 86], [60, 85], [70, 70], [100, 70]]);
+
+    defineColor('yellow', [47, 62], [[25, 100], [40, 94], [50, 89], [60, 86], [70, 84], [80, 82], [90, 80], [100, 75]]);
+
+    defineColor('green', [63, 178], [[30, 100], [40, 90], [50, 85], [60, 81], [70, 74], [80, 64], [90, 50], [100, 40]]);
+
+    defineColor('blue', [179, 257], [[20, 100], [30, 86], [40, 80], [50, 74], [60, 60], [70, 52], [80, 44], [90, 39], [100, 35]]);
+
+    defineColor('purple', [258, 282], [[20, 100], [30, 87], [40, 79], [50, 70], [60, 65], [70, 59], [80, 52], [90, 45], [100, 42]]);
+
+    defineColor('pink', [283, 334], [[20, 100], [30, 90], [40, 86], [60, 84], [80, 80], [90, 75], [100, 73]]);
+  }
+
+  function HSVtoRGB(hsv) {
+
+    // this doesn't work for the values of 0 and 360
+    // here's the hacky fix
+    var h = hsv[0];
+    if (h === 0) {
+      h = 1;
+    }
+    if (h === 360) {
+      h = 359;
+    }
+
+    // Rebase the h,s,v values
+    h = h / 360;
+    var s = hsv[1] / 100,
+        v = hsv[2] / 100;
+
+    var h_i = Math.floor(h * 6),
+        f = h * 6 - h_i,
+        p = v * (1 - s),
+        q = v * (1 - f * s),
+        t = v * (1 - (1 - f) * s),
+        r = 256,
+        g = 256,
+        b = 256;
+
+    switch (h_i) {
+      case 0:
+        r = v;g = t;b = p;break;
+      case 1:
+        r = q;g = v;b = p;break;
+      case 2:
+        r = p;g = v;b = t;break;
+      case 3:
+        r = p;g = q;b = v;break;
+      case 4:
+        r = t;g = p;b = v;break;
+      case 5:
+        r = v;g = p;b = q;break;
+    }
+
+    var result = [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+    return result;
+  }
+
+  function HexToHSB(hex) {
+    hex = hex.replace(/^#/, '');
+    hex = hex.length === 3 ? hex.replace(/(.)/g, '$1$1') : hex;
+
+    var red = parseInt(hex.substr(0, 2), 16) / 255,
+        green = parseInt(hex.substr(2, 2), 16) / 255,
+        blue = parseInt(hex.substr(4, 2), 16) / 255;
+
+    var cMax = Math.max(red, green, blue),
+        delta = cMax - Math.min(red, green, blue),
+        saturation = cMax ? delta / cMax : 0;
+
+    switch (cMax) {
+      case red:
+        return [60 * ((green - blue) / delta % 6) || 0, saturation, cMax];
+      case green:
+        return [60 * ((blue - red) / delta + 2) || 0, saturation, cMax];
+      case blue:
+        return [60 * ((red - green) / delta + 4) || 0, saturation, cMax];
+    }
+  }
+
+  function HSVtoHSL(hsv) {
+    var h = hsv[0],
+        s = hsv[1] / 100,
+        v = hsv[2] / 100,
+        k = (2 - s) * v;
+
+    return [h, Math.round(s * v / (k < 1 ? k : 2 - k) * 10000) / 100, k / 2 * 100];
+  }
+
+  function stringToInteger(string) {
+    var total = 0;
+    for (var i = 0; i !== string.length; i++) {
+      if (total >= Number.MAX_SAFE_INTEGER) break;
+      total += string.charCodeAt(i);
+    }
+    return total;
+  }
+
+  return randomColor;
 });
-
-_mm2.default.init();
-
-var R = __webpack_require__(10);
-window.R = R;
-
-var _ = __webpack_require__(11);
-window._ = _;
-
-var $m = __webpack_require__(4);
-window.$m = $m;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)(module)))
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var $ = __webpack_require__(12);
-var $nprogress = __webpack_require__(13);
-var $randomcolor = __webpack_require__(8);
-var $shortcut = __webpack_require__(14);
-var $m = __webpack_require__(4);
-var Vue = __webpack_require__(5);
-var R = __webpack_require__(10);
-var _ = __webpack_require__(11);
-
-var mm = {};
-module.exports = mm;
-
-var userInfo = null // 로그인한 사용자 정보
-,
-    memoRef,
-    memoList = [],
-    visibleRowCnt = 50;
-
-mm.memoList = memoList;
-
-// local function
-function showMemoList(uid) {
-    $m(".state").html("");
-    firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
-        $m._each(snapshot.val(), function (val, key) {
-            addItem(key, val, "append");
-        });
-    });
-}
-
-function initMemoList(uid) {
-    //timelog("전체메모 조회 전");
-    memoRef = firebase.database().ref("memos/" + uid);
-    memoRef.on("child_added", onChildAdded);
-    memoRef.on("child_changed", onChildChanged);
-    memoRef.on("child_removed", onChildRemoved);
-    memoRef.once('value', function (snapshot) {
-        //timelog("전체메모 조회 후");
-        $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
-        $nprogress.done();
-    });
-}
-
-function addItem(key, memoData, how) {
-    var memo = {
-        key: key,
-        createDate: new Date(memoData.createDate).toString().substr(4, 17),
-        firstTxt: memoData.txt.substr(0, 1).toUpperCase(),
-        txt: _br_nbsp_link(memoData.txt)
-    };
-
-    if (how === "append") {
-        app.memos.splice(0, 0, memo);
-    } else {
-        app.memos.push(memo);
-    }
-
-    // 오른쪽 끝 컨텍스트버튼 이벤트 처리
-    Vue.nextTick(function () {
-        setContextBtnEvent($("#" + key + " .btnContext"));
-        setTouchSlider($("#" + key));
-    });
-}
-
-function _br_nbsp_link(str, word) {
-    if (word) {
-        var reg = new RegExp("(" + word + ")", "gi");
-    }
-    return str.split("\n").map(function (val) {
-        return val.split(" ").map(function (val) {
-            var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;"); // XSS 방어코드
-            if (word) {
-                // 매칭단어 하이라이트
-                newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
-            }
-            if (val.indexOf("http://") == 0 || val.indexOf("https://") == 0) {
-                return "<a href=\"" + val + "\" target=\"_blank\">" + newval + "</a>";
-            } else {
-                return newval;
-            }
-        }).join("&nbsp;"); // 공백문자 &nbsp; 치환
-    }).join("<br/>"); // 새줄문자 <br/> 치환
-}
-
-function getMemoHtml(key, memoData) {
-    var txt = memoData.txt;
-    var createDate = new Date(memoData.createDate).toString().substr(4, 17);
-    var firstTxt = txt.substr(0, 1).toUpperCase();
-
-    txt = _br_nbsp_link(txt);
-
-    var removeBtn = "";
-    var editBtn = "";
-    if (typeof userInfo != null) {
-        // 내가 작성한 글인 경우만 수정/삭제버튼이 표시
-        removeBtn = "<i id=\"btn_delete\" onclick='mm.removeMemo(\"" + key + "\")' class=\"material-icons\">delete</i>";
-        editBtn = "<i id=\"btn_edit\" onclick='mm.editMemo(\"" + key + "\")' class=\"material-icons\">edit</i>";
-    }
-
-    var color = $randomcolor({ hue: userInfo.data ? userInfo.data.iconColor : "green", luminosity: "dark" }); // https://randomcolor.llllll.li/
-
-    var liChild = "<i class=\"material-icons circle\" style=\"background-color:" + color + ";\" onclick=\"mm.searchFirstTxt(this)\">" + firstTxt + "</i>\n            <p><i class=\"createDate\">" + createDate + "</i><i class=\"btnContext\"><<</i>\n            <div class=\"txt\" style=\"font-size:" + (userInfo.data ? userInfo.data.fontSize : "18px") + ";\">" + txt + "</div></p>" + removeBtn + editBtn;
-
-    var li = "<li id=\"" + key + "\" class=\"collection-item avatar\">" + liChild + "</li>";
-    var html = {};
-    html.li = li;
-    html.liChild = liChild;
-    return html;
-}
-
-function inPlaceMemo() {
-    // 왼쪽으로 이동된 row들 제자리로 잡아두기
-    _.go($m("#list li").doms, _.filter(function (v) {
-        return $m(v).css("left") === "-100px";
-    }), _.each(function (v) {
-        return $(v).animate({ left: "0px" }, 300, function () {
-            return $m("#" + v.id + " .btnContext").text("<<");
-        });
-    }));
-}
-
-function onChildAdded(data) {
-    inPlaceMemo();
-    memoList.push(data);
-    var curDate = Date.now();
-    var createDate = data.val().createDate;
-    var diff = curDate - createDate;
-    //console.log(diff);
-    if (diff < 1000) {
-        // 방금 새로 등록한 글인 경우만
-        addItem(data.key, data.val(), "append");
-        if ($m(".state").html() === "") {
-            $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
-        } else {
-            $m(".header .title").html(memoList.length + " memos");
-        }
-    }
-}
-
-function onChildChanged(data) {
-    inPlaceMemo();
-    var key = data.key;
-    var memoData = data.val();
-
-    _.go(app.memos, _.find(function (o) {
-        return o.key === key;
-    }), function (res) {
-        res.createDate = new Date(memoData.createDate).toString().substr(4, 17);
-        res.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
-        res.txt = _br_nbsp_link(memoData.txt);
-    });
-
-    // 오른쪽 끝 컨텍스트버튼 이벤트 처리
-    Vue.nextTick(function () {
-        setContextBtnEvent($("#" + key + " .btnContext"));
-    });
-}
-
-function onChildRemoved(data) {
-    inPlaceMemo();
-    var key = data.key;
-    app.memos.splice(_.findIndex(app.memos, function (o) {
-        return o.key === key;
-    }), 1);
-    //$m("#" + key).remove();
-    memoList.splice(memoList.indexOf(data), 1); // memoList에서 삭제된 요소 제거
-    $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
-}
-
-function setHeader() {
-    if (userInfo != null) {
-        $m("#nickname").val(userInfo.data.nickname);
-        $m("#fontSize").val(userInfo.data.fontSize.replace("px", ""));
-        $m("#iconColor").val(userInfo.data.iconColor);
-        mm.iconColor(userInfo.data.iconColor);
-    } else {
-        $m(".header .title").html("minimemo");
-    }
-}
-
-function setContextBtnEvent(btn) {
-    btn.bind("click", function () {
-        if (btn.text() == "<<") {
-            btn.parent().parent().animate({ left: "-100px" }, 300, function () {
-                return btn.text(">>");
-            });
-        } else {
-            btn.parent().parent().animate({ left: "0px" }, 300, function () {
-                return btn.text("<<");
-            });
-        }
-    });
-}
-
-function setTouchSlider(row) {
-    var start_x, diff_x;
-    var start_y, diff_y;
-    var dom_start_x;
-
-    function touchstart(e) {
-        start_x = e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX;
-        start_y = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
-        dom_start_x = $m(this).position().left; // 터치시작할 때 최초 dom요소의 x위치를 기억하고 있어야 함
-    }
-
-    function touchmove(e) {
-        diff_x = (e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX) - start_x;
-        diff_y = (e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY) - start_y;
-        if (Math.abs(diff_x) > Math.abs(diff_y * 4)) {
-            $m(this).css("left", dom_start_x + diff_x);
-        }
-    }
-
-    function touchend() {
-        if (diff_x < -50) {
-            $(this).animate({ left: "-100px" }, 300);
-        } else {
-            $(this).animate({ left: "0px" }, 300);
-        }
-    }
-
-    row.bind("touchstart", touchstart);
-    row.bind("touchmove", touchmove);
-    row.bind("touchend", touchend);
-}
-
-mm.signOut = function () {
-    if (confirm("로그아웃 합니다")) {
-        firebase.auth().signOut().then(function () {
-            location.href = "/login.html";
-        }, function (error) {
-            console.error("Sign Out Error", error);
-        });
-    }
-};
-
-mm.searchFirstTxt = function (obj) {
-    //var firstTxt = event.target.innerText;
-    var firstTxt = obj.innerText;
-    memoRef.once("value").then(function (snapshot) {
-        $m("#list").html("");
-        var reg = new RegExp(firstTxt, "i");
-        var memoObj = snapshot.val();
-
-        $m._each(memoObj, function (val, key, list) {
-            var res = reg.exec(val.txt);
-            if (res !== null && res.index == 0) {
-                addItem(key, val);
-            }
-        });
-
-        $m(".header .title").html(memoList.length + " memos");
-        $m(".header .state").html("> <span style=\"font-style:italic;\">" + firstTxt + "</span> \"s " + $m("#list li").length + " results");
-        // 매칭단어 하이라이트닝
-        $m(".txt").each(function (val, key, arr) {
-            val.innerHTML = val.innerHTML.replace(firstTxt, "<span style=\"background-color:yellow;\">" + firstTxt + "</span>"); // html태그 내용까지 매치되면 치환하는 문제가 있음
-        });
-    });
-};
-
-function setShortcut() {
-    // 단축키 설정
-    $shortcut.add("Alt+W", function () {
-        mm.writeMemo();
-    });
-    $shortcut.add("Alt+S", function () {
-        mm.searchClick();
-    });
-}
-
-function login() {
-    //timelog("로그인 전");
-    firebase.auth().onAuthStateChanged(function (user) {
-        //timelog("로그인 후");
-        if (user) {
-            // 인증완료
-            mm.userInfo = userInfo = user;
-            showMemoList(userInfo.uid);
-            $m("#writeBtn").show();
-
-            //timelog("사용자 정보 로드 전");
-            var userRef = firebase.database().ref("users/" + userInfo.uid);
-            userRef.once('value').then(function (snapshot) {
-                //timelog("사용자 정보 로드 후");
-                if (snapshot.val() != null) {
-                    userInfo.data = snapshot.val();
-                    app.user = JSON.parse(JSON.stringify(userInfo.data));
-
-                    setHeader();
-                    $m("#list li .circle").each(function (val, key, arr) {
-                        var color = $randomcolor({ hue: userInfo.data ? userInfo.data.iconColor : "all", luminosity: "dark" }); // https://randomcolor.llllll.li/
-                        $m(val).css("background-color", color);
-                    });
-                    $m("#list li .txt").each(function (val, key, arr) {
-                        $m(val).css("font-size", userInfo.data.fontSize);
-                    });
-                } else {
-                    // 신규 로그인 경우
-                    var userData = {
-                        fontSize: "18px",
-                        iconColor: "green",
-                        email: userInfo.email,
-                        nickname: userInfo.email.split("@")[0]
-                    };
-                    userRef.set(userData, function () {
-                        userInfo.data = userData;
-                        setHeader();
-                    });
-                }
-                initMemoList(userInfo.uid);
-            });
-        } else {
-            location.href = "/login.html";
-            /*
-            userInfo = null;
-            setHeader();
-            $nprogress.done();
-            if (confirm("로그인이 필요합니다")) {
-                firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-            }
-            */
-        }
-    });
-}
-
-function conOn() {
-    if (userInfo != null) {
-        userInfo.isConnected = true;
-    }
-    $m("#writeBtn").show();
-    $m("#addBtn").html("쓰기");
-}
-
-function conOff() {
-    if (userInfo != null) {
-        userInfo.isConnected = false;
-    }
-    $m("#writeBtn").hide();
-    setTimeout(function () {
-        // 20초 동안 연결이 끊어져 있는 경우라면
-        if (userInfo.isConnected == false) {
-            $m("#writeBtn").show();
-            $m("#addBtn").html("로긴");
-        }
-    }, 20000);
-    //alert("연결상태가 끊어졌습니다.");
-}
-
-mm.setNickname = function (nickname) {
-    userInfo.data.nickname = nickname;
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m(".header .title").html(userInfo.data.nickname + "'s " + memoList.length + " memos");
-};
-
-mm.setFontSize = function (size) {
-    app.user.fontSize = userInfo.data.fontSize = size + "px";
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    $m(".txt").css("font-size", userInfo.data.fontSize);
-};
-
-mm.setIconColor = function (color) {
-    userInfo.data.iconColor = color;
-    firebase.database().ref("users/" + userInfo.uid).update(userInfo.data);
-    mm.iconColor(color);
-};
-
-mm.iconColor = function (color) {
-    var setBgColor = function setBgColor(selector, color2) {
-        return $m(selector).css("background-color", color2 ? color2 : $randomcolor({ hue: color, luminosity: "dark" }));
-    };
-
-    // 각 row 들
-    /*
-    $m("#list i.circle").each(function (val, key, arr) {
-        setBgColor(val);
-    });
-    */
-
-    // R.forEach(setBgColor, $m("#list i.circle").doms);    // 이거는 안됨, https://min9nim.github.io/frontend/2018/03/31/ramdajs-forEach.html
-    R.forEach(function (val) {
-        return setBgColor(val);
-    }, $m("#list i.circle").doms);
-
-    // 헤더 및 버튼들
-    R.forEach(setBgColor, [".header", "#topNavi", "#btn_search", "#btn_cancel"]);
-    var tmp = $randomcolor({ hue: color, luminosity: "dark" });
-    setBgColor("#addBtn", tmp);
-    setBgColor($m("#addBtn").parent(), tmp);
-};
-
-mm.bodyScroll = function () {
-    if ($m(".state").html() != "") {
-        // 검색결과 일때
-        return;
-    }
-
-    if (window.scrollY == $(document).height() - $(window).height()) {
-        $nprogress.start();
-        $m("#nprogress .spinner").css("top", "95%");
-        var end = memoList.length - $m("#list li").length;
-        var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
-        var nextList = memoList.slice(start, end).reverse();
-
-        /*
-        nextList.forEach(function (x, i) {
-            addItem(x.key, x.val(), "append");
-        });
-        */
-
-        R.forEach(function (x) {
-            return addItem(x.key, x.val());
-        }, nextList);
-
-        $nprogress.done();
-    }
-};
-
-mm.topNavi = function () {
-    $m.scrollTo("", 0);
-};
-
-mm.titleClick = function () {
-    if (userInfo) {
-        showMemoList(userInfo.uid);
-    } else {
-        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-        location.href = "/login.html";
-    }
-};
-
-mm.init = function () {
-    $nprogress.start(); // https://github.com/rstacruz/nprogress
-    login();
-    setShortcut();
-    firebase.database().ref(".info/connected").on("value", function (snap) {
-        if (snap.val() === true) {
-            conOn();
-        } else {
-            conOff();
-        }
-    });
-};
-
-mm.listClick = function () {
-    $(".menu").animate({ left: "-220px" }, 300);
-};
-
-mm.cancelWrite = function () {
-    $m(".dialog").css("display", "none");
-};
-
-mm.searchMemo = function () {
-    var word = $m("#input2").val().trim();
-
-    if (word.length > 100) {
-        alert("100자 이내로 입력 가능");
-        return;
-    }
-    if (word === "") {
-        alert("내용을 입력해 주세요");
-        return;
-    }
-
-    $m(".search").css("display", "none");
-
-    memoRef.once("value").then(function (snapshot) {
-        $m("#list").html("");
-        var txts = [];
-
-        $m._each(snapshot.val(), function (val, key) {
-            if (val.txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
-                addItem(key, val);
-                txts.push(val.txt);
-            }
-        });
-
-        $m(".header .title").html(memoList.length + " memos");
-        $m(".header .state").html("> <span style=\"font-style:italic;\">" + word + "</span> 's " + $m("#list li").length + " results");
-        /*
-                $m(".txt").each(function (val, key, arr) {
-                    var oriTxt = txts[txts.length-1-key];
-                    $m(val).html(_br_nbsp_link(oriTxt, word));
-                });
-        */
-
-        _.each($m(".txt").doms, function (val, key) {
-            return _.go(_.mr(txts[txts.length - 1 - key], word), _br_nbsp_link, _($m.eleHtml, val));
-        });
-    });
-};
-
-mm.saveMemo = function () {
-    var key = $m("#input").attr("key");
-    var txt = $m("#input").val().trim();
-
-    if (txt.length > 60000) {
-        alert("60000자 이내로 입력 가능");
-        return;
-    }
-    if (txt === "") {
-        alert("내용을 입력해 주세요");
-        return;
-    }
-
-    $m(".dialog").css("display", "none");
-
-    if (key == "") {
-        // 저장
-        firebase.database().ref("memos/" + userInfo.uid).push({
-            txt: txt,
-            createDate: Date.now(),
-            updateDate: Date.now()
-        });
-    } else {
-        // 수정
-        firebase.database().ref("memos/" + userInfo.uid + "/" + key).update({
-            txt: txt,
-            updateDate: Date.now()
-        });
-    }
-};
-
-mm.menuClick = function () {
-    if ($m(".menu").css("left") == "0px") {
-        $(".menu").animate({ left: "-220px" }, 300);
-    } else {
-        $(".menu").animate({ left: "0px" }, 300);
-    }
-};
-
-mm.removeMemo = function (key) {
-    if (userInfo && userInfo.isConnected) {
-        if (confirm("삭제하시겠습니까?")) {
-            firebase.database().ref("memos/" + userInfo.uid + "/" + key).remove();
-        }
-    } else {
-        alert("로그인이 필요합니다");
-    }
-};
-
-mm.editMemo = function (key) {
-    if (userInfo && userInfo.isConnected) {
-        firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
-            $m(".dialog").css("display", "block");
-            $m(".dialog").css("top", window.scrollY);
-            $m("#input").val(snapshot.val().txt);
-            $m("#input").focus();
-            $m("#input").attr("key", key);
-        });
-    } else {
-        alert("로그인이 필요합니다");
-    }
-};
-
-mm.writeMemo = function () {
-    if (userInfo && userInfo.isConnected) {
-        if ($m(".search").css("display") == "block") {
-            return; // 글검색 상태인 경우에는 취소
-        }
-        $m(".dialog").css("display", "block");
-        $m("#input").val("");
-        $m("#input").focus();
-        $m("#input").attr("key", "");
-    } else {
-        if (confirm("로그인이 필요합니다")) firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-    }
-};
-
-mm.searchClick = function () {
-    if (userInfo && userInfo.isConnected) {
-        if ($m(".dialog").css("display") == "block") {
-            return; // 글쓰기 상태라면 취소
-        }
-        $m(".search").css("display", "block");
-        $m("#input2").val("");
-        $m("#input2").focus();
-    } else {
-        alert("로그인이 필요합니다");
-        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-    }
-};
-
-mm.cancelSearch = function () {
-    $m(".search").css("display", "none");
-};
-
-mm.keydownCheck = function (event) {
-    var keycode = event.which ? event.which : event.keyCode;
-    if ((event.metaKey || event.altKey) && keycode == 13) {
-        if ($m(".dialog").css("display") == "block") {
-            mm.saveMemo();
-        } else {
-            mm.searchMemo();
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-    }
-};
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -988,7 +730,10 @@ $m.fn = {
         var left = this.doms[0].style["left"];
         left = Number(left.substring(0, left.length - 2));
 
-        return { "top": top, "left": left };
+        return {
+            "top": top,
+            "left": left
+        };
     },
 
     parent: function parent(selector, ele) {
@@ -1162,11 +907,20 @@ $m.clone = function (elem) {
 };
 
 $m.scrollTo = function (x, y) {
-    window.scrollTo(x, y);
+    return window.scrollTo(x, y);
 };
 
-$m.eleHtml = function (selector, html) {
-    $m(selector).html(html);
+// 함수형 프로그래밍을 위한 함수 중심 API
+$m.html = function (selector, html) {
+    return $m(selector).html(html);
+};
+
+$m.css = function (selector, name, value) {
+    return $m(selector).css(name, value);
+};
+
+$m.val = function (selector, value) {
+    return $m(selector).val(value);
 };
 
 // 함수형 프로그래밍 라이브러리
@@ -1239,6 +993,14 @@ $m._slice = function (list, begin, end) {
     }
 };
 
+$m._join = $m._curryr(function (list, delim) {
+    return Array.prototype.join.call(list, delim);
+});
+
+$m._split = $m._curryr(function (str, delim) {
+    return String.prototype.split.call(str, delim);
+});
+
 $m._go = function () {
     var args = arguments;
     var fns = $m._slice(args, 1);
@@ -1255,7 +1017,7 @@ $m._pipe = function () {
 };
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11043,856 +10805,69 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   return Vue$3;
 });
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(1).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(5).setImmediate))
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(13);
+exports.setImmediate = setImmediate;
+exports.clearImmediate = clearImmediate;
+
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
-    "use strict";
-
-    if (global.setImmediate) {
-        return;
-    }
-
-    var nextHandle = 1; // Spec says greater than zero
-    var tasksByHandle = {};
-    var currentlyRunningATask = false;
-    var doc = global.document;
-    var registerImmediate;
-
-    function setImmediate(callback) {
-      // Callback can either be a function or a string
-      if (typeof callback !== "function") {
-        callback = new Function("" + callback);
-      }
-      // Copy function arguments
-      var args = new Array(arguments.length - 1);
-      for (var i = 0; i < args.length; i++) {
-          args[i] = arguments[i + 1];
-      }
-      // Store and register the task
-      var task = { callback: callback, args: args };
-      tasksByHandle[nextHandle] = task;
-      registerImmediate(nextHandle);
-      return nextHandle++;
-    }
-
-    function clearImmediate(handle) {
-        delete tasksByHandle[handle];
-    }
-
-    function run(task) {
-        var callback = task.callback;
-        var args = task.args;
-        switch (args.length) {
-        case 0:
-            callback();
-            break;
-        case 1:
-            callback(args[0]);
-            break;
-        case 2:
-            callback(args[0], args[1]);
-            break;
-        case 3:
-            callback(args[0], args[1], args[2]);
-            break;
-        default:
-            callback.apply(undefined, args);
-            break;
-        }
-    }
-
-    function runIfPresent(handle) {
-        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
-        // So if we're currently running a task, we'll need to delay this invocation.
-        if (currentlyRunningATask) {
-            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
-            // "too much recursion" error.
-            setTimeout(runIfPresent, 0, handle);
-        } else {
-            var task = tasksByHandle[handle];
-            if (task) {
-                currentlyRunningATask = true;
-                try {
-                    run(task);
-                } finally {
-                    clearImmediate(handle);
-                    currentlyRunningATask = false;
-                }
-            }
-        }
-    }
-
-    function installNextTickImplementation() {
-        registerImmediate = function(handle) {
-            process.nextTick(function () { runIfPresent(handle); });
-        };
-    }
-
-    function canUsePostMessage() {
-        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
-        // where `global.postMessage` means something completely different and can't be used for this purpose.
-        if (global.postMessage && !global.importScripts) {
-            var postMessageIsAsynchronous = true;
-            var oldOnMessage = global.onmessage;
-            global.onmessage = function() {
-                postMessageIsAsynchronous = false;
-            };
-            global.postMessage("", "*");
-            global.onmessage = oldOnMessage;
-            return postMessageIsAsynchronous;
-        }
-    }
-
-    function installPostMessageImplementation() {
-        // Installs an event handler on `global` for the `message` event: see
-        // * https://developer.mozilla.org/en/DOM/window.postMessage
-        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
-
-        var messagePrefix = "setImmediate$" + Math.random() + "$";
-        var onGlobalMessage = function(event) {
-            if (event.source === global &&
-                typeof event.data === "string" &&
-                event.data.indexOf(messagePrefix) === 0) {
-                runIfPresent(+event.data.slice(messagePrefix.length));
-            }
-        };
-
-        if (global.addEventListener) {
-            global.addEventListener("message", onGlobalMessage, false);
-        } else {
-            global.attachEvent("onmessage", onGlobalMessage);
-        }
-
-        registerImmediate = function(handle) {
-            global.postMessage(messagePrefix + handle, "*");
-        };
-    }
-
-    function installMessageChannelImplementation() {
-        var channel = new MessageChannel();
-        channel.port1.onmessage = function(event) {
-            var handle = event.data;
-            runIfPresent(handle);
-        };
-
-        registerImmediate = function(handle) {
-            channel.port2.postMessage(handle);
-        };
-    }
-
-    function installReadyStateChangeImplementation() {
-        var html = doc.documentElement;
-        registerImmediate = function(handle) {
-            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
-            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
-            var script = doc.createElement("script");
-            script.onreadystatechange = function () {
-                runIfPresent(handle);
-                script.onreadystatechange = null;
-                html.removeChild(script);
-                script = null;
-            };
-            html.appendChild(script);
-        };
-    }
-
-    function installSetTimeoutImplementation() {
-        registerImmediate = function(handle) {
-            setTimeout(runIfPresent, 0, handle);
-        };
-    }
-
-    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
-    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
-    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
-
-    // Don't get fooled by e.g. browserify environments.
-    if ({}.toString.call(global.process) === "[object process]") {
-        // For Node.js before 0.9
-        installNextTickImplementation();
-
-    } else if (canUsePostMessage()) {
-        // For non-IE10 modern browsers
-        installPostMessageImplementation();
-
-    } else if (global.MessageChannel) {
-        // For web workers, where supported
-        installMessageChannelImplementation();
-
-    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
-        // For IE 6–8
-        installReadyStateChangeImplementation();
-
-    } else {
-        // For older browsers
-        installSetTimeoutImplementation();
-    }
-
-    attachTo.setImmediate = setImmediate;
-    attachTo.clearImmediate = clearImmediate;
-}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(7)))
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-// randomColor by David Merfield under the CC0 license
-// https://github.com/davidmerfield/randomColor/
-
-;(function (root, factory) {
-
-  // Support CommonJS
-  if (( false ? 'undefined' : _typeof(exports)) === 'object') {
-    var randomColor = factory();
-
-    // Support NodeJS & Component, which allow module.exports to be a function
-    if (( false ? 'undefined' : _typeof(module)) === 'object' && module && module.exports) {
-      exports = module.exports = randomColor;
-    }
-
-    // Support CommonJS 1.1.1 spec
-    exports.randomColor = randomColor;
-
-    // Support AMD
-  } else if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-    // Support vanilla script loading
-  } else {
-    root.randomColor = factory();
-  }
-})(undefined, function () {
-
-  // Seed to get repeatable colors
-  var seed = null;
-
-  // Shared color dictionary
-  var colorDictionary = {};
-
-  // Populate the color dictionary
-  loadColorBounds();
-
-  var randomColor = function randomColor(options) {
-
-    options = options || {};
-
-    // Check if there is a seed and ensure it's an
-    // integer. Otherwise, reset the seed value.
-    if (options.seed !== undefined && options.seed !== null && options.seed === parseInt(options.seed, 10)) {
-      seed = options.seed;
-
-      // A string was passed as a seed
-    } else if (typeof options.seed === 'string') {
-      seed = stringToInteger(options.seed);
-
-      // Something was passed as a seed but it wasn't an integer or string
-    } else if (options.seed !== undefined && options.seed !== null) {
-      throw new TypeError('The seed value must be an integer or string');
-
-      // No seed, reset the value outside.
-    } else {
-      seed = null;
-    }
-
-    var H, S, B;
-
-    // Check if we need to generate multiple colors
-    if (options.count !== null && options.count !== undefined) {
-
-      var totalColors = options.count,
-          colors = [];
-
-      options.count = null;
-
-      while (totalColors > colors.length) {
-
-        // Since we're generating multiple colors,
-        // incremement the seed. Otherwise we'd just
-        // generate the same color each time...
-        if (seed && options.seed) options.seed += 1;
-
-        colors.push(randomColor(options));
-      }
-
-      options.count = totalColors;
-
-      return colors;
-    }
-
-    // First we pick a hue (H)
-    H = pickHue(options);
-
-    // Then use H to determine saturation (S)
-    S = pickSaturation(H, options);
-
-    // Then use S and H to determine brightness (B).
-    B = pickBrightness(H, S, options);
-
-    // Then we return the HSB color in the desired format
-    return setFormat([H, S, B], options);
-  };
-
-  function pickHue(options) {
-
-    var hueRange = getHueRange(options.hue),
-        hue = randomWithin(hueRange);
-
-    // Instead of storing red as two seperate ranges,
-    // we group them, using negative numbers
-    if (hue < 0) {
-      hue = 360 + hue;
-    }
-
-    return hue;
-  }
-
-  function pickSaturation(hue, options) {
-
-    if (options.hue === 'monochrome') {
-      return 0;
-    }
-
-    if (options.luminosity === 'random') {
-      return randomWithin([0, 100]);
-    }
-
-    var saturationRange = getSaturationRange(hue);
-
-    var sMin = saturationRange[0],
-        sMax = saturationRange[1];
-
-    switch (options.luminosity) {
-
-      case 'bright':
-        sMin = 55;
-        break;
-
-      case 'dark':
-        sMin = sMax - 10;
-        break;
-
-      case 'light':
-        sMax = 55;
-        break;
-    }
-
-    return randomWithin([sMin, sMax]);
-  }
-
-  function pickBrightness(H, S, options) {
-
-    var bMin = getMinimumBrightness(H, S),
-        bMax = 100;
-
-    switch (options.luminosity) {
-
-      case 'dark':
-        bMax = bMin + 20;
-        break;
-
-      case 'light':
-        bMin = (bMax + bMin) / 2;
-        break;
-
-      case 'random':
-        bMin = 0;
-        bMax = 100;
-        break;
-    }
-
-    return randomWithin([bMin, bMax]);
-  }
-
-  function setFormat(hsv, options) {
-
-    switch (options.format) {
-
-      case 'hsvArray':
-        return hsv;
-
-      case 'hslArray':
-        return HSVtoHSL(hsv);
-
-      case 'hsl':
-        var hsl = HSVtoHSL(hsv);
-        return 'hsl(' + hsl[0] + ', ' + hsl[1] + '%, ' + hsl[2] + '%)';
-
-      case 'hsla':
-        var hslColor = HSVtoHSL(hsv);
-        var alpha = options.alpha || Math.random();
-        return 'hsla(' + hslColor[0] + ', ' + hslColor[1] + '%, ' + hslColor[2] + '%, ' + alpha + ')';
-
-      case 'rgbArray':
-        return HSVtoRGB(hsv);
-
-      case 'rgb':
-        var rgb = HSVtoRGB(hsv);
-        return 'rgb(' + rgb.join(', ') + ')';
-
-      case 'rgba':
-        var rgbColor = HSVtoRGB(hsv);
-        var alpha = options.alpha || Math.random();
-        return 'rgba(' + rgbColor.join(', ') + ', ' + alpha + ')';
-
-      default:
-        return HSVtoHex(hsv);
-    }
-  }
-
-  function getMinimumBrightness(H, S) {
-
-    var lowerBounds = getColorInfo(H).lowerBounds;
-
-    for (var i = 0; i < lowerBounds.length - 1; i++) {
-
-      var s1 = lowerBounds[i][0],
-          v1 = lowerBounds[i][1];
-
-      var s2 = lowerBounds[i + 1][0],
-          v2 = lowerBounds[i + 1][1];
-
-      if (S >= s1 && S <= s2) {
-
-        var m = (v2 - v1) / (s2 - s1),
-            b = v1 - m * s1;
-
-        return m * S + b;
-      }
-    }
-
-    return 0;
-  }
-
-  function getHueRange(colorInput) {
-
-    if (typeof parseInt(colorInput) === 'number') {
-
-      var number = parseInt(colorInput);
-
-      if (number < 360 && number > 0) {
-        return [number, number];
-      }
-    }
-
-    if (typeof colorInput === 'string') {
-
-      if (colorDictionary[colorInput]) {
-        var color = colorDictionary[colorInput];
-        if (color.hueRange) {
-          return color.hueRange;
-        }
-      } else if (colorInput.match(/^#?([0-9A-F]{3}|[0-9A-F]{6})$/i)) {
-        var hue = HexToHSB(colorInput)[0];
-        return [hue, hue];
-      }
-    }
-
-    return [0, 360];
-  }
-
-  function getSaturationRange(hue) {
-    return getColorInfo(hue).saturationRange;
-  }
-
-  function getColorInfo(hue) {
-
-    // Maps red colors to make picking hue easier
-    if (hue >= 334 && hue <= 360) {
-      hue -= 360;
-    }
-
-    for (var colorName in colorDictionary) {
-      var color = colorDictionary[colorName];
-      if (color.hueRange && hue >= color.hueRange[0] && hue <= color.hueRange[1]) {
-        return colorDictionary[colorName];
-      }
-    }return 'Color not found';
-  }
-
-  function randomWithin(range) {
-    if (seed === null) {
-      return Math.floor(range[0] + Math.random() * (range[1] + 1 - range[0]));
-    } else {
-      //Seeded random algorithm from http://indiegamr.com/generate-repeatable-random-numbers-in-js/
-      var max = range[1] || 1;
-      var min = range[0] || 0;
-      seed = (seed * 9301 + 49297) % 233280;
-      var rnd = seed / 233280.0;
-      return Math.floor(min + rnd * (max - min));
-    }
-  }
-
-  function HSVtoHex(hsv) {
-
-    var rgb = HSVtoRGB(hsv);
-
-    function componentToHex(c) {
-      var hex = c.toString(16);
-      return hex.length == 1 ? '0' + hex : hex;
-    }
-
-    var hex = '#' + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
-
-    return hex;
-  }
-
-  function defineColor(name, hueRange, lowerBounds) {
-
-    var sMin = lowerBounds[0][0],
-        sMax = lowerBounds[lowerBounds.length - 1][0],
-        bMin = lowerBounds[lowerBounds.length - 1][1],
-        bMax = lowerBounds[0][1];
-
-    colorDictionary[name] = {
-      hueRange: hueRange,
-      lowerBounds: lowerBounds,
-      saturationRange: [sMin, sMax],
-      brightnessRange: [bMin, bMax]
-    };
-  }
-
-  function loadColorBounds() {
-
-    defineColor('monochrome', null, [[0, 0], [100, 0]]);
-
-    defineColor('red', [-26, 18], [[20, 100], [30, 92], [40, 89], [50, 85], [60, 78], [70, 70], [80, 60], [90, 55], [100, 50]]);
-
-    defineColor('orange', [19, 46], [[20, 100], [30, 93], [40, 88], [50, 86], [60, 85], [70, 70], [100, 70]]);
-
-    defineColor('yellow', [47, 62], [[25, 100], [40, 94], [50, 89], [60, 86], [70, 84], [80, 82], [90, 80], [100, 75]]);
-
-    defineColor('green', [63, 178], [[30, 100], [40, 90], [50, 85], [60, 81], [70, 74], [80, 64], [90, 50], [100, 40]]);
-
-    defineColor('blue', [179, 257], [[20, 100], [30, 86], [40, 80], [50, 74], [60, 60], [70, 52], [80, 44], [90, 39], [100, 35]]);
-
-    defineColor('purple', [258, 282], [[20, 100], [30, 87], [40, 79], [50, 70], [60, 65], [70, 59], [80, 52], [90, 45], [100, 42]]);
-
-    defineColor('pink', [283, 334], [[20, 100], [30, 90], [40, 86], [60, 84], [80, 80], [90, 75], [100, 73]]);
-  }
-
-  function HSVtoRGB(hsv) {
-
-    // this doesn't work for the values of 0 and 360
-    // here's the hacky fix
-    var h = hsv[0];
-    if (h === 0) {
-      h = 1;
-    }
-    if (h === 360) {
-      h = 359;
-    }
-
-    // Rebase the h,s,v values
-    h = h / 360;
-    var s = hsv[1] / 100,
-        v = hsv[2] / 100;
-
-    var h_i = Math.floor(h * 6),
-        f = h * 6 - h_i,
-        p = v * (1 - s),
-        q = v * (1 - f * s),
-        t = v * (1 - (1 - f) * s),
-        r = 256,
-        g = 256,
-        b = 256;
-
-    switch (h_i) {
-      case 0:
-        r = v;g = t;b = p;break;
-      case 1:
-        r = q;g = v;b = p;break;
-      case 2:
-        r = p;g = v;b = t;break;
-      case 3:
-        r = p;g = q;b = v;break;
-      case 4:
-        r = t;g = p;b = v;break;
-      case 5:
-        r = v;g = p;b = q;break;
-    }
-
-    var result = [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
-    return result;
-  }
-
-  function HexToHSB(hex) {
-    hex = hex.replace(/^#/, '');
-    hex = hex.length === 3 ? hex.replace(/(.)/g, '$1$1') : hex;
-
-    var red = parseInt(hex.substr(0, 2), 16) / 255,
-        green = parseInt(hex.substr(2, 2), 16) / 255,
-        blue = parseInt(hex.substr(4, 2), 16) / 255;
-
-    var cMax = Math.max(red, green, blue),
-        delta = cMax - Math.min(red, green, blue),
-        saturation = cMax ? delta / cMax : 0;
-
-    switch (cMax) {
-      case red:
-        return [60 * ((green - blue) / delta % 6) || 0, saturation, cMax];
-      case green:
-        return [60 * ((blue - red) / delta + 2) || 0, saturation, cMax];
-      case blue:
-        return [60 * ((red - green) / delta + 4) || 0, saturation, cMax];
-    }
-  }
-
-  function HSVtoHSL(hsv) {
-    var h = hsv[0],
-        s = hsv[1] / 100,
-        v = hsv[2] / 100,
-        k = (2 - s) * v;
-
-    return [h, Math.round(s * v / (k < 1 ? k : 2 - k) * 10000) / 100, k / 2 * 100];
-  }
-
-  function stringToInteger(string) {
-    var total = 0;
-    for (var i = 0; i !== string.length; i++) {
-      if (total >= Number.MAX_SAFE_INTEGER) break;
-      total += string.charCodeAt(i);
-    }
-    return total;
-  }
-
-  return randomColor;
-});
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)(module)))
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if(!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if(!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
-
-/***/ }),
-/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21245,7 +20220,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 
 /***/ }),
-/* 11 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23519,10 +22494,693 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     });
   };
 }((typeof global === 'undefined' ? 'undefined' : _typeof(global)) == 'object' && global.global == global && (global.G = global) || (window.G = window));
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(1).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(5).setImmediate))
 
 /***/ }),
-/* 12 */
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _mm = __webpack_require__(9);
+
+var _mm2 = _interopRequireDefault(_mm);
+
+var _vue = __webpack_require__(4);
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//var mm = require("./mm.js");
+var $randomcolor = __webpack_require__(2);
+
+window.mm = _mm2.default;
+
+window.app = new _vue2.default({
+    el: '#app',
+    data: {
+        title: "minimemo is loading..",
+        memos: [],
+        user: {
+            "email": "",
+            "fontSize": "",
+            "iconColor": "",
+            "nickname": ""
+        },
+        mm: _mm2.default
+    },
+    methods: {
+        bgcolor: function bgcolor() {
+            return "background-color:" + $randomcolor({ hue: app.user.iconColor, luminosity: "dark" }) + ";";
+        }
+    },
+    computed: {},
+    watch: {}
+});
+
+_mm2.default.init();
+
+var R = __webpack_require__(6);
+window.R = R;
+
+var _ = __webpack_require__(7);
+window._ = _;
+
+var $m = __webpack_require__(3);
+window.$m = $m;
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var $ = __webpack_require__(10);
+var $nprogress = __webpack_require__(11);
+var $randomcolor = __webpack_require__(2);
+var $shortcut = __webpack_require__(12);
+var $m = __webpack_require__(3);
+var Vue = __webpack_require__(4);
+var R = __webpack_require__(6);
+var _ = __webpack_require__(7);
+
+var mm = {};
+module.exports = mm;
+
+var userInfo = null // 로그인한 사용자 정보
+,
+    memoRef,
+    memoList = [],
+    visibleRowCnt = 50;
+
+mm.memoList = memoList;
+
+// local function
+function showMemoList(uid) {
+    $m(".state").html("");
+    firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
+        $m._each(snapshot.val(), function (val, key) {
+            addItem(key, val, "append");
+        });
+    });
+}
+
+function initMemoList(uid) {
+    //timelog("전체메모 조회 전");
+    memoRef = firebase.database().ref("memos/" + uid);
+    memoRef.on("child_added", onChildAdded);
+    memoRef.on("child_changed", onChildChanged);
+    memoRef.on("child_removed", onChildRemoved);
+    memoRef.once('value', function (snapshot) {
+        //timelog("전체메모 조회 후");
+        $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+        $nprogress.done();
+    });
+}
+
+function addItem(key, memoData, how) {
+    var memo = {
+        key: key,
+        createDate: new Date(memoData.createDate).toString().substr(4, 17),
+        firstTxt: memoData.txt.substr(0, 1).toUpperCase(),
+        //txt : _br_nbsp_link(memoData.txt),
+        txt: _format_txt(memoData.txt)
+    };
+
+    if (how === "append") {
+        app.memos.splice(0, 0, memo);
+    } else {
+        app.memos.push(memo);
+    }
+
+    // 오른쪽 끝 컨텍스트버튼 이벤트 처리
+    Vue.nextTick(function () {
+        setContextBtnEvent($("#" + key + " .btnContext"));
+        setTouchSlider($("#" + key));
+    });
+}
+
+function _br_nbsp_link(str, word) {
+    if (word) {
+        var reg = new RegExp("(" + word + ")", "gi");
+    }
+    return str.split("\n").map(function (val) {
+        return val.split(" ").map(function (val) {
+            var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;"); // XSS 방어코드
+            if (word) {
+                // 매칭단어 하이라이트
+                newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
+            }
+            if (val.indexOf("http://") == 0 || val.indexOf("https://") == 0) {
+                return "<a href=\"" + val + "\" target=\"_blank\">" + newval + "</a>";
+            } else {
+                return newval;
+            }
+        }).join("&nbsp;"); // 공백문자 &nbsp; 치환
+    }).join("<br/>"); // 새줄문자 <br/> 치환
+}
+
+function _format_txt(str, word) {
+
+    var _link = function _link(val, word) {
+        var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;"); // XSS 방어코드
+        if (word) {
+            // 매칭단어 하이라이트
+            var reg = new RegExp("(" + word + ")", "gi");
+            newval = newval.replace(reg, '<span style="background-color:yellow;">$1</span>');
+        }
+        if (val.indexOf("http://") == 0 || val.indexOf("https://") == 0) {
+            return "<a href=\"" + val + "\" target=\"_blank\">" + newval + "</a>";
+        } else {
+            return newval;
+        }
+    };
+
+    _link = $m._curryr(_link)(word);
+
+    return $m._go(str.split("\n"), $m._map(function (val) {
+        return $m._go(val.split(" "), $m._map(_link), $m._join("&nbsp;"));
+    }), $m._join("<br/>"));
+}
+
+function inPlaceMemo() {
+    // 왼쪽으로 이동된 row들 제자리로 잡아두기
+    _.go($m("#list li").doms, _.filter(function (v) {
+        return $m(v).css("left") === "-100px";
+    }), _.each(function (v) {
+        return $(v).animate({ left: "0px" }, 300, function () {
+            return $m("#" + v.id + " .btnContext").text("<<");
+        });
+    }));
+}
+
+function onChildAdded(data) {
+    inPlaceMemo();
+    memoList.push(data);
+    var curDate = Date.now();
+    var createDate = data.val().createDate;
+    var diff = curDate - createDate;
+    //console.log(diff);
+    if (diff < 1000) {
+        // 방금 새로 등록한 글인 경우만
+        addItem(data.key, data.val(), "append");
+        if ($m(".state").html() === "") {
+            $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+        } else {
+            $m(".header .title").html(memoList.length + " memos");
+        }
+    }
+}
+
+function onChildChanged(data) {
+    inPlaceMemo();
+    var key = data.key;
+    var memoData = data.val();
+
+    _.go(app.memos, _.find(function (o) {
+        return o.key === key;
+    }), function (res) {
+        res.createDate = new Date(memoData.createDate).toString().substr(4, 17);
+        res.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
+        res.txt = _br_nbsp_link(memoData.txt);
+    });
+
+    // 오른쪽 끝 컨텍스트버튼 이벤트 처리
+    Vue.nextTick(function () {
+        setContextBtnEvent($("#" + key + " .btnContext"));
+    });
+}
+
+function onChildRemoved(data) {
+    inPlaceMemo();
+    var key = data.key;
+    app.memos.splice(_.findIndex(app.memos, function (o) {
+        return o.key === key;
+    }), 1);
+    //$m("#" + key).remove();
+    memoList.splice(memoList.indexOf(data), 1); // memoList에서 삭제된 요소 제거
+    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+}
+
+function setHeader() {
+    if (userInfo) {
+        //$m("#nickname").val(app.user.nickname);
+        $m.val("#nickname", app.user.nickname);
+        //$m("#fontSize").val(app.user.fontSize.replace("px", ""));
+        $m.val("#fontSize", app.user.fontSize.replace("px", ""));
+        //$m("#iconColor").val(app.user.iconColor);
+        $m.val("#iconColor", app.user.iconColor);
+        mm.iconColor(app.user.iconColor);
+    } else {
+        //$m(".header .title").html("minimemo");
+        $m.html(".header .title", "minimemo");
+    }
+}
+
+function setContextBtnEvent(btn) {
+    btn.bind("click", function () {
+        if (btn.text() == "<<") {
+            btn.parent().parent().animate({ left: "-100px" }, 300, function () {
+                return btn.text(">>");
+            });
+        } else {
+            btn.parent().parent().animate({ left: "0px" }, 300, function () {
+                return btn.text("<<");
+            });
+        }
+    });
+}
+
+function setTouchSlider(row) {
+    var start_x, diff_x;
+    var start_y, diff_y;
+    var dom_start_x;
+
+    function touchstart(e) {
+        start_x = e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX;
+        start_y = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+        dom_start_x = $m(this).position().left; // 터치시작할 때 최초 dom요소의 x위치를 기억하고 있어야 함
+    }
+
+    function touchmove(e) {
+        diff_x = (e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX) - start_x;
+        diff_y = (e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY) - start_y;
+        if (Math.abs(diff_x) > Math.abs(diff_y * 4)) {
+            $m(this).css("left", dom_start_x + diff_x);
+        }
+    }
+
+    function touchend() {
+        if (diff_x < -50) {
+            $(this).animate({ left: "-100px" }, 300);
+        } else {
+            $(this).animate({ left: "0px" }, 300);
+        }
+    }
+
+    row.bind("touchstart", touchstart);
+    row.bind("touchmove", touchmove);
+    row.bind("touchend", touchend);
+}
+
+mm.signOut = function () {
+    if (confirm("로그아웃 합니다")) {
+        firebase.auth().signOut().then(function () {
+            location.href = "/login.html";
+        }, function (error) {
+            console.error("Sign Out Error", error);
+        });
+    }
+};
+
+mm.searchFirstTxt = function (obj) {
+    //var firstTxt = event.target.innerText;
+    var firstTxt = obj.innerText;
+    memoRef.once("value").then(function (snapshot) {
+        $m("#list").html("");
+        var reg = new RegExp(firstTxt, "i");
+        var memoObj = snapshot.val();
+
+        $m._each(memoObj, function (val, key, list) {
+            var res = reg.exec(val.txt);
+            if (res !== null && res.index == 0) {
+                addItem(key, val);
+            }
+        });
+
+        $m(".header .title").html(memoList.length + " memos");
+        $m(".header .state").html("> <span style=\"font-style:italic;\">" + firstTxt + "</span> \"s " + $m("#list li").length + " results");
+        // 매칭단어 하이라이트닝
+        $m(".txt").each(function (val, key, arr) {
+            val.innerHTML = val.innerHTML.replace(firstTxt, "<span style=\"background-color:yellow;\">" + firstTxt + "</span>"); // html태그 내용까지 매치되면 치환하는 문제가 있음
+        });
+    });
+};
+
+function setShortcut() {
+    // 단축키 설정
+    $shortcut.add("Alt+W", function () {
+        mm.writeMemo();
+    });
+    $shortcut.add("Meta+W", function () {
+        mm.writeMemo(); // 이게 안 잡히네.. ㅠ
+    });
+    $shortcut.add("Alt+S", function () {
+        mm.searchClick();
+    });
+    $shortcut.add("Meta+S", function () {
+        mm.searchClick();
+    });
+}
+
+function login() {
+    //timelog("로그인 전");
+    firebase.auth().onAuthStateChanged(function (user) {
+        //timelog("로그인 후");
+        if (user) {
+            // 인증완료
+            mm.userInfo = userInfo = user;
+            showMemoList(userInfo.uid);
+            $m("#writeBtn").show();
+
+            //timelog("사용자 정보 로드 전");
+            var userRef = firebase.database().ref("users/" + userInfo.uid);
+            userRef.once('value').then(function (snapshot) {
+                //timelog("사용자 정보 로드 후");
+                if (snapshot.val()) {
+                    app.user = JSON.parse(JSON.stringify(snapshot.val()));
+
+                    setHeader();
+                    $m("#list li .circle").each(function (val, key, arr) {
+                        var color = $randomcolor({ hue: app.user.iconColor || "all", luminosity: "dark" }); // https://randomcolor.llllll.li/
+                        $m(val).css("background-color", color);
+                    });
+                    $m("#list li .txt").each(function (val, key, arr) {
+                        $m(val).css("font-size", app.user.fontSize);
+                    });
+                } else {
+                    // 신규 로그인 경우
+                    app.user = {
+                        fontSize: "18px",
+                        iconColor: "green",
+                        email: userInfo.email,
+                        nickname: userInfo.email.split("@")[0]
+                    };
+                    userRef.set(app.user, function () {
+                        setHeader();
+                    });
+                }
+                initMemoList(userInfo.uid);
+            });
+        } else {
+            location.href = "/login.html";
+            /*
+            userInfo = null;
+            setHeader();
+            $nprogress.done();
+            if (confirm("로그인이 필요합니다")) {
+                firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+            }
+            */
+        }
+    });
+}
+
+function conOn() {
+    if (userInfo != null) {
+        userInfo.isConnected = true;
+    }
+    $m("#writeBtn").show();
+    $m("#addBtn").html("쓰기");
+}
+
+function conOff() {
+    if (userInfo != null) {
+        userInfo.isConnected = false;
+    }
+    $m("#writeBtn").hide();
+    setTimeout(function () {
+        // 20초 동안 연결이 끊어져 있는 경우라면
+        if (userInfo.isConnected == false) {
+            $m("#writeBtn").show();
+            $m("#addBtn").html("로긴");
+        }
+    }, 20000);
+    //alert("연결상태가 끊어졌습니다.");
+}
+
+mm.setNickname = function (nickname) {
+    app.user.nickname = nickname;
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+};
+
+mm.setFontSize = function (size) {
+    app.user.fontSize = app.user.fontSize = size + "px";
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    //$m(".txt").css("font-size", app.user.fontSize);
+    $m.css(".txt", "font-size", app.user.fontSize);
+};
+
+mm.setIconColor = function (color) {
+    app.user.iconColor = color;
+    firebase.database().ref("users/" + userInfo.uid).update(app.user);
+    mm.iconColor(color);
+};
+
+mm.iconColor = function (color) {
+    var setBgColor = function setBgColor(selector, color2) {
+        return $m(selector).css("background-color", color2 ? color2 : $randomcolor({ hue: color, luminosity: "dark" }));
+    };
+
+    // 각 row 들
+    /*
+    $m("#list i.circle").each(function (val, key, arr) {
+        setBgColor(val);
+    });
+    */
+
+    // R.forEach(setBgColor, $m("#list i.circle").doms);    // 이거는 안됨, https://min9nim.github.io/frontend/2018/03/31/ramdajs-forEach.html
+    //R.forEach(val => setBgColor(val), $m("#list i.circle").doms);
+    $m._each($m("#list i.circle").doms, function (ele) {
+        return setBgColor(ele);
+    });
+
+    // 헤더 및 버튼들
+    //R.forEach(setBgColor, [".header", "#topNavi", "#btn_search", "#btn_cancel"]);
+    $m._each([".header", "#topNavi", "#btn_search", "#btn_cancel"], function (selector) {
+        return setBgColor(selector);
+    });
+
+    /*
+    var tmp = $randomcolor({hue: color, luminosity: "dark"});
+    setBgColor("#addBtn", tmp);
+    setBgColor($m("#addBtn").parent(), tmp);
+    */
+
+    $m._go($randomcolor({ hue: color, luminosity: "dark" }), function (color) {
+        setBgColor("#addBtn", color);
+        setBgColor($m("#addBtn").parent(), color);
+    });
+};
+
+mm.bodyScroll = function () {
+    if ($m(".state").html() != "") {
+        // 검색결과 일때
+        return;
+    }
+
+    if (window.scrollY == $(document).height() - $(window).height()) {
+        $nprogress.start();
+        $m("#nprogress .spinner").css("top", "95%");
+        var end = memoList.length - $m("#list li").length;
+        var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
+        var nextList = memoList.slice(start, end).reverse();
+
+        /*
+        nextList.forEach(function (x, i) {
+            addItem(x.key, x.val(), "append");
+        });
+        */
+
+        R.forEach(function (x) {
+            return addItem(x.key, x.val());
+        }, nextList);
+
+        $nprogress.done();
+    }
+};
+
+mm.topNavi = function () {
+    $m.scrollTo("", 0);
+};
+
+mm.titleClick = function () {
+    if (userInfo) {
+        showMemoList(userInfo.uid);
+    } else {
+        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+        location.href = "/login.html";
+    }
+};
+
+mm.init = function () {
+    $nprogress.start(); // https://github.com/rstacruz/nprogress
+    login();
+    setShortcut();
+    firebase.database().ref(".info/connected").on("value", function (snap) {
+        if (snap.val() === true) {
+            conOn();
+        } else {
+            conOff();
+        }
+    });
+};
+
+mm.listClick = function () {
+    $(".menu").animate({ left: "-220px" }, 300);
+};
+
+mm.cancelWrite = function () {
+    //$m(".dialog").css("display", "none");
+    $m.css(".dialog", "display", "none");
+};
+
+mm.searchMemo = function () {
+    var word = $m("#input2").val().trim();
+
+    if (word.length > 100) {
+        alert("100자 이내로 입력 가능");
+        return;
+    }
+    if (word === "") {
+        alert("내용을 입력해 주세요");
+        return;
+    }
+
+    $m(".search").css("display", "none");
+
+    memoRef.once("value").then(function (snapshot) {
+        $m("#list").html("");
+        var txts = [];
+
+        $m._each(snapshot.val(), function (val, key) {
+            if (val.txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
+                addItem(key, val);
+                txts.push(val.txt);
+            }
+        });
+
+        //$m(".header .title").html(memoList.length + " memos");
+        $m.html(".header .title", memoList.length + " memos");
+        //$m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
+        $m.html(".header .state", "> <span style=\"font-style:italic;\">" + word + "</span> 's " + $m("#list li").length + " results");
+        /*
+                $m(".txt").each(function (val, key, arr) {
+                    var oriTxt = txts[txts.length-1-key];
+                    $m(val).html(_br_nbsp_link(oriTxt, word));
+                });
+        */
+        _.each($m(".txt").doms, function (ele, key) {
+            return _.go(_.mr(txts[txts.length - 1 - key], word), _br_nbsp_link, $m._curry($m.html)(ele));
+        });
+    });
+};
+
+mm.saveMemo = function () {
+    var key = $m("#input").attr("key");
+    var txt = $m("#input").val().trim();
+
+    if (txt.length > 60000) {
+        alert("60000자 이내로 입력 가능");
+        return;
+    }
+    if (txt === "") {
+        alert("내용을 입력해 주세요");
+        return;
+    }
+
+    $m(".dialog").css("display", "none");
+
+    if (key == "") {
+        // 저장
+        firebase.database().ref("memos/" + userInfo.uid).push({
+            txt: txt,
+            createDate: Date.now(),
+            updateDate: Date.now()
+        });
+    } else {
+        // 수정
+        firebase.database().ref("memos/" + userInfo.uid + "/" + key).update({
+            txt: txt,
+            updateDate: Date.now()
+        });
+    }
+};
+
+mm.menuClick = function () {
+    if ($m(".menu").css("left") == "0px") {
+        $(".menu").animate({ left: "-220px" }, 300);
+    } else {
+        $(".menu").animate({ left: "0px" }, 300);
+    }
+};
+
+mm.removeMemo = function (key) {
+    if (userInfo && userInfo.isConnected) {
+        if (confirm("삭제하시겠습니까?")) {
+            firebase.database().ref("memos/" + userInfo.uid + "/" + key).remove();
+        }
+    } else {
+        alert("로그인이 필요합니다");
+    }
+};
+
+mm.editMemo = function (key) {
+    if (userInfo && userInfo.isConnected) {
+        firebase.database().ref("memos/" + userInfo.uid + "/" + key).once("value").then(function (snapshot) {
+            $m(".dialog").css("display", "block");
+            $m(".dialog").css("top", window.scrollY);
+            $m("#input").val(snapshot.val().txt);
+            $m("#input").focus();
+            $m("#input").attr("key", key);
+        });
+    } else {
+        alert("로그인이 필요합니다");
+    }
+};
+
+mm.writeMemo = function () {
+    if (userInfo && userInfo.isConnected) {
+        if ($m(".search").css("display") == "block") {
+            return; // 글검색 상태인 경우에는 취소
+        }
+        $m(".dialog").css("display", "block");
+        $m("#input").val("");
+        $m("#input").focus();
+        $m("#input").attr("key", "");
+    } else {
+        if (confirm("로그인이 필요합니다")) firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+    }
+};
+
+mm.searchClick = function () {
+    if (userInfo && userInfo.isConnected) {
+        if ($m(".dialog").css("display") == "block") {
+            return; // 글쓰기 상태라면 취소
+        }
+        $m(".search").css("display", "block");
+        $m("#input2").val("");
+        $m("#input2").focus();
+    } else {
+        alert("로그인이 필요합니다");
+        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+    }
+};
+
+mm.cancelSearch = function () {
+    $m(".search").css("display", "none");
+};
+
+mm.keydownCheck = function (event) {
+    var keycode = event.which ? event.which : event.keyCode;
+    if ((event.metaKey || event.altKey) && keycode == 13) {
+        if ($m(".dialog").css("display") == "block") {
+            mm.saveMemo();
+        } else {
+            mm.searchMemo();
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+};
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33355,10 +33013,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 	return jQuery;
 });
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)(module)))
 
 /***/ }),
-/* 13 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33853,7 +33511,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 
 /***/ }),
-/* 14 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -34073,6 +33731,389 @@ var shortcut = {
 };
 
 module.exports = shortcut;
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
+    "use strict";
+
+    if (global.setImmediate) {
+        return;
+    }
+
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
+
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
+
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
+                }
+            }
+        }
+    }
+
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
+    }
+
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
+
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
+    }
+
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
+    }
+
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
+    }
+
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
+
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
+    }
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(14)))
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
 
 /***/ })
 /******/ ]);
