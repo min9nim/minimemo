@@ -1,15 +1,15 @@
+import $m from "../src/util.js";
 
 const $ = require("../ext/jquery.js");
 const $nprogress = require("../ext/nprogress.js");
 const $randomcolor = require("../ext/randomColor.js");
 const $shortcut = require("../ext/shortcut.js");
-const $m = require("../src/util.js");
 const Vue = require("../ext/vue.js");
-const R = require('../ext/ramda.js');
 const _ = require('../ext/partial.js');
 
 var mm = {};
-module.exports = mm;
+
+export {mm, randomcolor, $m, Vue, _}
 
 var userInfo = null // 로그인한 사용자 정보
     , memoRef
@@ -42,13 +42,12 @@ function initMemoList(uid) {
     });
 }
 
-function addItem(key, memoData, how) {
+function addItem(key, memoData, how, word) {
     const memo = {
         key: key,
         createDate : (new Date(memoData.createDate)).toString().substr(4, 17),
         firstTxt : memoData.txt.substr(0, 1).toUpperCase(),
-        //txt : _br_nbsp_link(memoData.txt),
-        txt : _format_txt(memoData.txt),
+        txt : _format_txt(memoData.txt, word),
     }
 
     if(how === "append"){
@@ -69,6 +68,7 @@ function _br_nbsp_link(str, word){
     if(word){
         var reg = new RegExp("("+word+")", "gi");
     }
+
     return str.split("\n").map(function(val){
         return val.split(" ").map(function(val){
             var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
@@ -86,7 +86,6 @@ function _br_nbsp_link(str, word){
 
 
 function _format_txt(str, word){
-
      var _link = (val, word) => {
         var newval = val.replace(/</gi, "&lt;").replace(/>/gi, "&gt;")  // XSS 방어코드
         if(word){ // 매칭단어 하이라이트
@@ -149,15 +148,13 @@ function onChildChanged(data) {
     var key = data.key;
     var memoData = data.val();
 
-    _.go(
-    	app.memos,
-        _.find(o => o.key === key),
-        function(res){
-            res.createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
-            res.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
-            res.txt = _br_nbsp_link(memoData.txt);
-        }
-    )
+    var idx = $m._findIndex(mm.memoList, o => o.key === key);
+    mm.memoList.splice(idx, 1, data);
+
+    var vm_memo = $m._find(app.memos, o => o.key === key);
+    vm_memo.createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
+    vm_memo.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
+    vm_memo.txt = _br_nbsp_link(memoData.txt);
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
     Vue.nextTick(function(){
@@ -247,25 +244,18 @@ mm.signOut = function () {
 mm.searchFirstTxt = function (obj) {
     //var firstTxt = event.target.innerText;
     var firstTxt = obj.innerText;
-    memoRef.once("value").then(function (snapshot) {
-        $m("#list").html("");
-        var reg = new RegExp(firstTxt, "i");
-        var memoObj = snapshot.val();
 
-        $m._each(memoObj, function(val,key,list){
-            var res = reg.exec(val.txt);
-            if (res !== null && res.index == 0) {
-                addItem(key, val);
-            }
-        });
-
-        $m(".header .title").html(memoList.length + " memos");
-        $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> "s ${$m("#list li").length} results`);
-        // 매칭단어 하이라이트닝
-        $m(".txt").each(function (val, key, arr) {
-            val.innerHTML = val.innerHTML.replace(firstTxt, `<span style="background-color:yellow;">${firstTxt}</span>`); // html태그 내용까지 매치되면 치환하는 문제가 있음
-        });
+    app.memos = [];
+    var reg = new RegExp(firstTxt, "i");
+    $m._each(mm.memoList, function(memo){
+        var res = reg.exec(memo.val().txt);
+        if (res !== null && res.index == 0) {
+            addItem(memo.key, memo.val(), "append", firstTxt);
+        }
     });
+
+    $m(".header .title").html(memoList.length + " memos");
+    $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> 's ${app.memos.length} results`);
 }
 
 function setShortcut(){
@@ -285,6 +275,11 @@ function setShortcut(){
 
 }
 
+
+function randomcolor(color){
+    return $randomcolor({hue: color || "all", luminosity: "dark"});
+}
+
 function login(){
     //timelog("로그인 전");
     firebase.auth().onAuthStateChanged(function (user) {
@@ -300,16 +295,9 @@ function login(){
                 //timelog("사용자 정보 로드 후");
                 if (snapshot.val()) {
                     app.user = JSON.parse(JSON.stringify(snapshot.val()));
-
                     setHeader();
-                    $m("#list li .circle").each(function(val, key, arr){
-                        var color = $randomcolor({hue: app.user.iconColor || "all", luminosity: "dark"});  // https://randomcolor.llllll.li/
-                        $m(val).css("background-color", color);
-                    });
-                    $m("#list li .txt").each(function(val, key, arr){
-                        $m(val).css("font-size", app.user.fontSize);
-                    });
-
+                    $m._each($m("#list li .circle").doms, _($m.css, _, "background-color", randomcolor(app.user.iconColor)));
+                    $m._each($m("#list li .txt").doms, _($m.css, _, "font-size", app.user.fontSize));
                 } else {// 신규 로그인 경우
                     app.user = {
                         fontSize: "18px",
@@ -317,9 +305,7 @@ function login(){
                         email: userInfo.email,
                         nickname: userInfo.email.split("@")[0]
                     };
-                    userRef.set(app.user, function () {
-                        setHeader();
-                    });
+                    userRef.set(app.user, setHeader);
                 }
                 initMemoList(userInfo.uid);
             });
@@ -379,36 +365,13 @@ mm.setIconColor = function (color) {
 };
 
 mm.iconColor = function(color){
-    const setBgColor = (selector, color2) => $m(selector).css("background-color", color2 ? color2 : $randomcolor({hue: color, luminosity: "dark"}));
+    $m._each($m("#list i.circle").doms, _($m.css, _, "background-color", randomcolor(color)))
 
-    // 각 row 들
-    /*
-    $m("#list i.circle").each(function (val, key, arr) {
-        setBgColor(val);
-    });
-    */
+    $m._each([".header", "#topNavi", "#btn_search", "#btn_cancel"], _($m.css, _, "background-color", randomcolor(color)))
 
-    // R.forEach(setBgColor, $m("#list i.circle").doms);    // 이거는 안됨, https://min9nim.github.io/frontend/2018/03/31/ramdajs-forEach.html
-    //R.forEach(val => setBgColor(val), $m("#list i.circle").doms);
-    $m._each($m("#list i.circle").doms, ele => setBgColor(ele))
-
-    // 헤더 및 버튼들
-    //R.forEach(setBgColor, [".header", "#topNavi", "#btn_search", "#btn_cancel"]);
-    $m._each([".header", "#topNavi", "#btn_search", "#btn_cancel"], selector => setBgColor(selector))
-
-    /*
-    var tmp = $randomcolor({hue: color, luminosity: "dark"});
-    setBgColor("#addBtn", tmp);
-    setBgColor($m("#addBtn").parent(), tmp);
-    */
-
-    $m._go(
-        $randomcolor({hue: color, luminosity: "dark"}),
-        color => {
-            setBgColor("#addBtn", color);
-            setBgColor($m("#addBtn").parent(), color);
-        }
-    );
+    var color2 = randomcolor(color);
+    $m.css("#addBtn", "background-color", color2);
+    $m.css($m("#addBtn").parent(), "background-color", color2);
 
 }
 
@@ -425,13 +388,7 @@ mm.bodyScroll = function () {
         var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
         var nextList = memoList.slice(start, end).reverse();
 
-        /*
-        nextList.forEach(function (x, i) {
-            addItem(x.key, x.val(), "append");
-        });
-        */
-
-        R.forEach(x => addItem(x.key, x.val()), nextList);
+        $m._each(nextList, x => addItem(x.key, x.val()))
 
         $nprogress.done();
     }
@@ -456,7 +413,7 @@ mm.init = function () {
     login();
     setShortcut();
     firebase.database().ref(".info/connected").on("value", function (snap) {
-        if (snap.val() === true) {
+        if (snap.val()) {
             conOn();
         } else {
             conOff();
@@ -490,35 +447,16 @@ mm.searchMemo = function () {
 
     $m(".search").css("display", "none");
 
-    memoRef.once("value").then(function (snapshot) {
-        $m("#list").html("");
-        var txts = [];
 
-        $m._each(snapshot.val(), function(val, key){
-            if (val.txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
-                addItem(key, val);
-                txts.push(val.txt);
-            }
-        });
-
-        //$m(".header .title").html(memoList.length + " memos");
-        $m.html(".header .title", memoList.length + " memos")
-        //$m(".header .state").html(`> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`);
-        $m.html(".header .state", `> <span style="font-style:italic;">${word}</span> 's ${$m("#list li").length} results`)
-/*
-        $m(".txt").each(function (val, key, arr) {
-            var oriTxt = txts[txts.length-1-key];
-            $m(val).html(_br_nbsp_link(oriTxt, word));
-        });
-*/
-        _.each(
-            $m(".txt").doms, (ele, key) => _.go(
-                _.mr(txts[txts.length-1-key], word),
-                _br_nbsp_link,
-                $m._curry($m.html)(ele)
-            )
-        );
+    app.memos = [];
+    $m._each(mm.memoList, function(memo){
+        if (memo.val().txt.toLowerCase().indexOf(word.toLowerCase()) >= 0) {
+            addItem(memo.key, memo.val(), "append", word);
+        }
     });
+
+    $m.html(".header .title", memoList.length + " memos")
+    $m.html(".header .state", `> <span style="font-style:italic;">${word}</span> 's ${app.memos.length} results`)
 };
 
 

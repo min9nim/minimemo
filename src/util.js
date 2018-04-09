@@ -1,99 +1,6 @@
-//http://www.mojavelinux.com/articles/javascript_hashes.html
-function HashTable(obj) {
-    this.length = 0;
-    this.items = {};
-    for (var p in obj) {
-        if (obj.hasOwnProperty(p)) {
-            this.items[p] = obj[p];
-            this.length++;
-        }
-    }
-
-    this.setItem = function(key, value) {
-        var previous = undefined;
-        if (this.hasItem(key)) {
-            previous = this.items[key];
-        } else {
-            this.length++;
-        }
-        this.items[key] = value;
-        return previous;
-    }
-
-    this.getItem = function(key) {
-        return this.hasItem(key) ? this.items[key] : undefined;
-    }
-
-    this.hasItem = function(key) {
-        return this.items.hasOwnProperty(key);
-    }
-
-    this.removeItem = function(key) {
-        if (this.hasItem(key)) {
-            previous = this.items[key];
-            this.length--;
-            delete this.items[key];
-            return previous;
-        } else {
-            return undefined;
-        }
-    }
-
-    this.keys = function() {
-        var keys = [];
-        for (var k in this.items) {
-            if (this.hasItem(k)) {
-                keys.push(k);
-            }
-        }
-        return keys;
-    }
-
-    this.values = function() {
-        var values = [];
-        for (var k in this.items) {
-            if (this.hasItem(k)) {
-                values.push(this.items[k]);
-            }
-        }
-        return values;
-    }
-
-
-    this.getArray = function() {
-        var arr = [];
-        for (var k in this.items) {
-            if (this.hasItem(k)) {
-                var item = {};
-                item.key = k;
-                item.val = this.items[k];
-                arr.push(item);
-            }
-        }
-        return arr;
-    }
-
-    this.each = function(fn) {
-        for (var k in this.items) {
-            if (this.hasItem(k)) {
-                fn(k, this.items[k]);
-            }
-        }
-    }
-
-    this.clear = function() {
-        this.items = {}
-        this.length = 0;
-    }
-}
-
-
-
-var $m = function(sel) {
+export default function $m(sel) {
     return new $m.fn.init(sel);
 };
-
-module.exports = $m;
 
 $m.fn = {
     init: function(sel) {
@@ -101,9 +8,16 @@ $m.fn = {
             this.sel = sel;
             this.doms = document.querySelectorAll(sel);
             this.length = this.doms.length;
-        } else { // dom이 직접 들어올 경우
+        } else if(sel instanceof $m.fn.init) { // $m.fn.init 객체가 들어올 경우
+            this.sel = sel.sel;
+            this.doms = sel.doms;
+            this.length = sel.length;
+        } else if(sel instanceof Node){ // dom이 들어올 경우
             this.doms = [sel];
             this.length = 1;
+        } else if(sel[0] instanceof Node){  // dom배열이 들어올 경우
+            this.doms = sel;
+            this.length = sel.length;
         }
         if (this.length === 1) {
             this.dom = this.doms[0];
@@ -373,6 +287,15 @@ $m.val = function(selector, value) {
     return $m(selector).val(value);
 }
 
+$m.show = function(selector){
+    return $m(selector).show();
+}
+
+$m.hide = function(selector){
+    return $m(selector).hide();
+}
+
+
 // 함수형 프로그래밍 라이브러리
 $m._curry = function(fn) {
     return function(a, b) {
@@ -457,3 +380,27 @@ $m._pipe = function() {
         }, arguments[0]);
     }
 };
+
+$m._find = $m._curryr(function(list, fn) {
+    if (typeof list !== "object" || !list) {
+        return;
+    }
+    var keys = Object.keys(list);
+    for (var i = 0; i < keys.length; i++) {
+        if(fn(list[keys[i]], keys[i], list)){
+            return list[keys[i]];
+        }
+    }
+});
+
+$m._findIndex = $m._curryr(function(list, fn) {
+    if (typeof list !== "object" || !list) {
+        return;
+    }
+    var keys = Object.keys(list);
+    for (var i = 0; i < keys.length; i++) {
+        if(fn(list[keys[i]], keys[i], list)){
+            return keys[i];
+        }
+    }
+});

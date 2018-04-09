@@ -1,10 +1,11 @@
+import {mm, randomcolor, $m, Vue, _} from "../src/mm.js";
+//import $m from "../src/util.js";
+//import Vue from "../ext/vue.js";
+//const _ = require('../ext/partial.js');
 
-//var mm = require("./mm.js");
-import mm from "../src/mm.js";
-import Vue from "../ext/vue.js";
-const $randomcolor = require("../ext/randomColor.js");
-
+window._ = _;
 window.mm = mm;
+window.$m = $m;
 
 window.app = new Vue({
     el: '#app',
@@ -21,7 +22,7 @@ window.app = new Vue({
     },
     methods: {
         bgcolor : function(){
-            return `background-color:${$randomcolor({hue: app.user.iconColor, luminosity: "dark"})};`;
+            return `background-color:${randomcolor(app.user.iconColor)};`;
         }
     },
     computed : {
@@ -32,15 +33,3 @@ window.app = new Vue({
 });
 
 mm.init();
-
-
-
-
-const R = require('../ext/ramda.js');
-window.R = R;
-
-const _ = require('../ext/partial.js');
-window._ = _;
-
-const $m = require("../src/util.js");
-window.$m = $m;
