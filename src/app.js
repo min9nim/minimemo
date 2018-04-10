@@ -10,7 +10,7 @@ window.$m = $m;
 window.app = new Vue({
     el: '#app',
     data: {
-        title : "minimemo is loading..",
+        state : "",
         memos : [],
         user : {
             "email":"",
@@ -26,6 +26,15 @@ window.app = new Vue({
         }
     },
     computed : {
+        title : function(){
+            if(mm.memoList.length === 0){
+                return "minimemo is loading..";
+            }else if(app.user.nickname && app.state === ""){
+                return app.user.nickname + "'s " + mm.memoList.length + " memos";
+            }else{
+                return mm.memoList.length + " memos";
+            }
+        }
     },
     watch: {
 

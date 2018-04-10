@@ -42,8 +42,8 @@
     <body onscroll="mm.bodyScroll();">
         <div id="app">
             <div class="header"> <i id="btnMenu" class='material-icons' onclick="mm.menuClick();">menu</i>
-                <div class="title" onclick="mm.titleClick();">minimemo is loading..</div>
-                <div class="state"></div>
+                <div class="title" onclick="mm.titleClick();">{{title}}</div>
+                <div class="state" v-html="state"></div>
                 <div class="message"></div> <i id="btnSearch" class='material-icons' onclick="mm.searchClick();">search</i> </div>
             <ul class="menu collection">
                 <li class="collection-item">

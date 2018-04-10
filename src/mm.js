@@ -11,18 +11,21 @@ var mm = {};
 
 export {mm, randomcolor, $m, Vue, _}
 
-var userInfo = null // 로그인한 사용자 정보
-    , memoRef
-    , memoList = []
-    , visibleRowCnt = 50
-;
+var userInfo = null;
+var memoRef;
+var memoList = [];
+const VISIBLE_ROW_CNT = 50;
 
 mm.memoList = memoList;
 
 // local function
 function showMemoList(uid) {
-    $m(".state").html("");
-    firebase.database().ref("memos/" + uid).limitToLast(visibleRowCnt).once("value").then(function (snapshot) {
+    //app.title = app.user.nickname + "'s " + memoList.length + " memos";
+    app.state = "";
+    //$m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+
+
+    firebase.database().ref("memos/" + uid).limitToLast(VISIBLE_ROW_CNT).once("value").then(function (snapshot) {
         $m._each(snapshot.val(), function(val, key){
             addItem(key, val, "append");
         });
@@ -35,11 +38,14 @@ function initMemoList(uid) {
     memoRef.on("child_added", onChildAdded);
     memoRef.on("child_changed", onChildChanged);
     memoRef.on("child_removed", onChildRemoved);
-    memoRef.once('value', function(snapshot) {
+    $nprogress.done();
+
+    /*memoRef.once('value', function(snapshot) {
         //timelog("전체메모 조회 후");
-        $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
         $nprogress.done();
     });
+    */
+
 }
 
 function addItem(key, memoData, how, word) {
@@ -135,9 +141,9 @@ function onChildAdded(data) {
     if (diff < 1000) {// 방금 새로 등록한 글인 경우만
         addItem(data.key, data.val(), "append");
         if ($m(".state").html() === "") {
-            $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
+            //$m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
         } else {
-            $m(".header .title").html(memoList.length + " memos");
+            //$m(".header .title").html(memoList.length + " memos");
         }
     }
 }
@@ -166,25 +172,15 @@ function onChildRemoved(data) {
     inPlaceMemo();
     const key = data.key;
     app.memos.splice(_.findIndex(app.memos, o => o.key === key), 1);
-    //$m("#" + key).remove();
     memoList.splice(memoList.indexOf(data), 1);  // memoList에서 삭제된 요소 제거
-    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
 }
 
 
 function setHeader() {
-    if (userInfo) {
-        //$m("#nickname").val(app.user.nickname);
-        $m.val("#nickname", app.user.nickname);
-        //$m("#fontSize").val(app.user.fontSize.replace("px", ""));
-        $m.val("#fontSize", app.user.fontSize.replace("px", ""));
-        //$m("#iconColor").val(app.user.iconColor);
-        $m.val("#iconColor", app.user.iconColor);
-        mm.iconColor(app.user.iconColor)
-    } else {
-        //$m(".header .title").html("minimemo");
-        $m.html(".header .title", "minimemo");
-    }
+    $m.val("#nickname", app.user.nickname);
+    $m.val("#fontSize", app.user.fontSize.replace("px", ""));
+    $m.val("#iconColor", app.user.iconColor);
+    mm.iconColor(app.user.iconColor);
 }
 
 
@@ -254,8 +250,11 @@ mm.searchFirstTxt = function (obj) {
         }
     });
 
-    $m(".header .title").html(memoList.length + " memos");
-    $m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> 's ${app.memos.length} results`);
+    //$m(".header .title").html(memoList.length + " memos");
+    //app.header.title = memoList.length + " memos";
+    //$m(".header .state").html(`> <span style="font-style:italic;">${firstTxt}</span> 's ${app.memos.length} results`);
+    app.state = `> <span style="font-style:italic;">${firstTxt}</span> 's ${app.memos.length} results`;
+
 }
 
 function setShortcut(){
@@ -295,7 +294,7 @@ function login(){
                 //timelog("사용자 정보 로드 후");
                 if (snapshot.val()) {
                     app.user = JSON.parse(JSON.stringify(snapshot.val()));
-                    setHeader();
+
                     $m._each($m("#list li .circle").doms, _($m.css, _, "background-color", randomcolor(app.user.iconColor)));
                     $m._each($m("#list li .txt").doms, _($m.css, _, "font-size", app.user.fontSize));
                 } else {// 신규 로그인 경우
@@ -305,8 +304,10 @@ function login(){
                         email: userInfo.email,
                         nickname: userInfo.email.split("@")[0]
                     };
-                    userRef.set(app.user, setHeader);
+                    //userRef.set(app.user, setHeader);
+                    userRef.set(app.user);
                 }
+                setHeader();
                 initMemoList(userInfo.uid);
             });
         } else {
@@ -342,13 +343,11 @@ function conOff () {
             $m("#addBtn").html("로긴");
         }
     }, 20000);
-    //alert("연결상태가 끊어졌습니다.");
 }
 
 mm.setNickname = function (nickname) {
     app.user.nickname = nickname;
     firebase.database().ref("users/" + userInfo.uid).update(app.user);
-    $m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
 };
 
 mm.setFontSize = function (size) {
@@ -385,7 +384,7 @@ mm.bodyScroll = function () {
         $nprogress.start();
         $m("#nprogress .spinner").css("top", "95%");
         var end = memoList.length - $m("#list li").length;
-        var start = end - visibleRowCnt < 0 ? 0 : end - visibleRowCnt;
+        var start = end - VISIBLE_ROW_CNT < 0 ? 0 : end - VISIBLE_ROW_CNT;
         var nextList = memoList.slice(start, end).reverse();
 
         $m._each(nextList, x => addItem(x.key, x.val()))
@@ -399,12 +398,13 @@ mm.topNavi = function () {
 };
 
 mm.titleClick = function () {
-    if (userInfo) {
-        showMemoList(userInfo.uid);
-    } else {
-        //firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-        location.href = "/login.html";
-    }
+    showMemoList(userInfo.uid);
+    //
+    // if (userInfo) {
+    //     showMemoList(userInfo.uid);
+    // } else {
+    //     location.href = "/login.html";
+    // }
 };
 
 
@@ -455,8 +455,11 @@ mm.searchMemo = function () {
         }
     });
 
-    $m.html(".header .title", memoList.length + " memos")
-    $m.html(".header .state", `> <span style="font-style:italic;">${word}</span> 's ${app.memos.length} results`)
+    //$m.html(".header .title", memoList.length + " memos")
+    //app.header.title = memoList.length + " memos";
+    //$m.html(".header .state", `> <span style="font-style:italic;">${word}</span> 's ${app.memos.length} results`)
+    app.state = `> <span style="font-style:italic;">${word}</span> 's ${app.memos.length} results`;
+
 };
 
 
