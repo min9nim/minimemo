@@ -18,13 +18,8 @@ const VISIBLE_ROW_CNT = 50;
 
 mm.memoList = memoList;
 
-// local function
 function showMemoList(uid) {
-    //app.title = app.user.nickname + "'s " + memoList.length + " memos";
     app.state = "";
-    //$m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
-
-
     firebase.database().ref("memos/" + uid).limitToLast(VISIBLE_ROW_CNT).once("value").then(function (snapshot) {
         $m._each(snapshot.val(), function(val, key){
             addItem(key, val, "append");
@@ -33,19 +28,11 @@ function showMemoList(uid) {
 }
 
 function initMemoList(uid) {
-    //timelog("전체메모 조회 전");
     memoRef = firebase.database().ref("memos/" + uid);
     memoRef.on("child_added", onChildAdded);
     memoRef.on("child_changed", onChildChanged);
     memoRef.on("child_removed", onChildRemoved);
     $nprogress.done();
-
-    /*memoRef.once('value', function(snapshot) {
-        //timelog("전체메모 조회 후");
-        $nprogress.done();
-    });
-    */
-
 }
 
 function addItem(key, memoData, how, word) {
@@ -60,7 +47,6 @@ function addItem(key, memoData, how, word) {
         app.memos.splice(0, 0, memo);
     }else{
         app.memos.push(memo);
-
     }
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
@@ -108,17 +94,15 @@ function _format_txt(str, word){
     _link = $m._curryr(_link)(word);
 
     return $m._go(
-        str.split("\n"),
-        $m._map(val => $m._go(
-                val.split(" "),
-                $m._map(_link),
-                $m._join("&nbsp;")
-            )),
-        $m._join("<br/>")
-    );
+              str.split("\n"),
+              $m._map(val => $m._go(
+                      val.split(" "),
+                      $m._map(_link),
+                      $m._join("&nbsp;")
+                  )),
+              $m._join("<br/>")
+          );
 }
-
-
 
 function inPlaceMemo(){
     // 왼쪽으로 이동된 row들 제자리로 잡아두기
@@ -140,11 +124,6 @@ function onChildAdded(data) {
     //console.log(diff);
     if (diff < 1000) {// 방금 새로 등록한 글인 경우만
         addItem(data.key, data.val(), "append");
-        if ($m(".state").html() === "") {
-            //$m(".header .title").html(app.user.nickname + "'s " + memoList.length + " memos");
-        } else {
-            //$m(".header .title").html(memoList.length + " memos");
-        }
     }
 }
 
@@ -160,7 +139,8 @@ function onChildChanged(data) {
     var vm_memo = $m._find(app.memos, o => o.key === key);
     vm_memo.createDate = (new Date(memoData.createDate)).toString().substr(4, 17);
     vm_memo.firstTxt = memoData.txt.substr(0, 1).toUpperCase();
-    vm_memo.txt = _br_nbsp_link(memoData.txt);
+    //vm_memo.txt = _br_nbsp_link(memoData.txt);
+    vm_memo.txt = _format_txt(memoData.txt);
 
     // 오른쪽 끝 컨텍스트버튼 이벤트 처리
     Vue.nextTick(function(){

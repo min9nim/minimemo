@@ -1,7 +1,4 @@
 import {mm, randomcolor, $m, Vue, _} from "../src/mm.js";
-//import $m from "../src/util.js";
-//import Vue from "../ext/vue.js";
-//const _ = require('../ext/partial.js');
 
 window._ = _;
 window.mm = mm;
