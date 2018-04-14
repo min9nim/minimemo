@@ -8,7 +8,7 @@ minimemo 는 SNS 기능이 없는 개인용 **비공개** 한줄 블로그다. �
 
 ### 개발환경
 * Back-end : [firebase](https://firebase.google.com)
-* Front-end : es6, requirejs, webpack3, babel
+* Front-end : es6, webpack3, babel, sass
 * 지원브라우져: chrome, ie, firefox, safari
 
 ### 기능설명

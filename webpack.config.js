@@ -4,12 +4,13 @@ const webpack = require('/usr/local/lib/node_modules/webpack');
 module.exports = {
     entry: {
         bundle: './src/app.js',
-    }
-    , output: {
+    },
+    output: {
         path: path.resolve(__dirname, '.'),
         filename: '[name].js'
-    }
-    , module: {
+    },
+    module: {
+        /*
         loaders: [
             {
                 test: /\.js$/,
@@ -20,9 +21,26 @@ module.exports = {
                     presets: ['es2015']
                 }
             }
+        ],
+        */
+        rules: [{
+                    test: /\.js$/,
+                    exclude: /node_modules/,
+                    include: path.join(__dirname, '.'),
+                    use: {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: ['es2015']
+                        }
+                    }
+                },
+                {
+                    test: /\.(s*)css$/,
+                    use: ['style-loader', 'css-loader', 'sass-loader']
+                }
         ]
-    }
-    , watch : true
+    },
+    watch: true
     /*
     , plugins: [
         new webpack.optimize.UglifyJsPlugin({     // es6이상은 지원하지 못함

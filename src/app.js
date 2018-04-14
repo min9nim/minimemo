@@ -1,3 +1,5 @@
+import '../ext/nprogress.css';
+import '../css/style.scss';
 import {mm, randomcolor, $m, Vue, _} from "../src/mm.js";
 
 window._ = _;
