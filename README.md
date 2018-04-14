@@ -23,11 +23,11 @@ minimemo 는 SNS 기능이 없는 개인용 **비공개** 한줄 블로그다. �
 
 ### 스크린샷
 * 글목록  
-![list](https://raw.githubusercontent.com/min9nim/minimemo/master/list.png)
+![list](https://raw.githubusercontent.com/min9nim/minimemo/master/image/list.png)
 * 글쓰기  
-![write](https://raw.githubusercontent.com/min9nim/minimemo/master/write.png)
+![write](https://raw.githubusercontent.com/min9nim/minimemo/master/image/write.png)
 * 검색  
-![search](https://raw.githubusercontent.com/min9nim/minimemo/master/search.png)
+![search](https://raw.githubusercontent.com/min9nim/minimemo/master/image/search.png)
 
 ### 라이선스
 MIT License
