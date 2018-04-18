@@ -1,5 +1,10 @@
 const path = require('path');
-const webpack = require('/usr/local/lib/node_modules/webpack');
+
+if(process.platform === "win32"){
+  const webpack = require("C:\\Users\\myData\\project\\node_modules\\webpack");
+}else{
+  const webpack = require('/usr/local/lib/node_modules/webpack');
+}
 
 module.exports = {
     entry: {
