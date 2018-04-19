@@ -33,7 +33,7 @@ window.app = new Vue({
             }else{
                 return mm.memoList.length + " memos";
             }
-        }
+        },
     },
     watch: {
 

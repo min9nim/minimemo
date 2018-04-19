@@ -150,26 +150,6 @@
     });
 
 
-/*
-    var loginCheck = (function(){
-        var chkcnt = 2;
-        return function(){
-            var user = firebase.auth().currentUser;
-            if (user) {
-                console.log("로그인 성공");
-                location.href = "/index_vue.html";
-            } else {
-                console.log("로그인 실패 " + chkcnt);
-                if(chkcnt > 0){
-                    setTimeout(loginCheck, 500);
-                    chkcnt--;
-                }
-            }
-        }
-    })();
-    loginCheck();
-*/
-
     function googleLogin(){
         // 18.03.23
         // redirect 방법은 로그인 끝나고 이 페이지로 돌아왔을 때 firebase를 초기화하는데 시간이 오래 걸려서 팝업 방식으로 변경함
