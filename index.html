@@ -75,7 +75,7 @@
                 <li v-for="memo in memos" :id="memo.key" class="collection-item avatar">
                     <i class="material-icons circle" :style="bgcolor()" onclick="mm.searchFirstTxt(this)">{{memo.firstTxt}}</i>
                     <p><i class="createDate">{{memo.createDate}}</i><i class="btnContext"><<</i>
-                        <div class="txt" :style="'font-size:' + user.fontSize" v-html="memo.txt"></div>
+                        <div class="txt" v-html="memo.txt"></div>
                     </p><i id="btn_delete" @click='mm.removeMemo(memo.key)' class="material-icons">delete</i><i id="btn_edit" @click='mm.editMemo(memo.key)' class="material-icons">edit</i></li>
             </ul>
             <div id="topBtn" class="fixed-action-btn" style="bottom: 110px; right: 24px;"> <a class="btn-floating btn-large waves-effect waves-light" style="opacity: 0.3;" onclick="mm.topNavi();"> <i id="topNavi" class="material-icons">arrow_upward</i> </a> </div>

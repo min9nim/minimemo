@@ -276,7 +276,9 @@ function login(){
                     app.user = JSON.parse(JSON.stringify(snapshot.val()));
 
                     $m._each($m("#list li .circle").doms, _($m.css, _, "background-color", randomcolor(app.user.iconColor)));
-                    $m._each($m("#list li .txt").doms, _($m.css, _, "font-size", app.user.fontSize));
+                    //$m._each($m("#list li .txt").doms, _($m.css, _, "font-size", app.user.fontSize));
+                    $("<style/>", {text: `.txt {font-size: ${app.user.fontSize};}`}).appendTo('head');
+
                 } else {// 신규 로그인 경우
                     app.user = {
                         fontSize: "18px",
@@ -334,7 +336,8 @@ mm.setFontSize = function (size) {
     app.user.fontSize = app.user.fontSize = size + "px";
     firebase.database().ref("users/" + userInfo.uid).update(app.user);
     //$m(".txt").css("font-size", app.user.fontSize);
-    $m.css(".txt", "font-size", app.user.fontSize);
+    //$m.css(".txt", "font-size", app.user.fontSize);
+    $("<style/>", {text: `.txt {font-size: ${app.user.fontSize};}`}).appendTo('head');
 };
 
 mm.setIconColor = function (color) {

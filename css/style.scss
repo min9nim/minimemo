@@ -44,7 +44,7 @@
 .txt {
     display: inline-block;
     padding-top: 0px;
-    line-height: 26px;
+    line-height: initial;
     word-wrap: break-word;
     width: 100%;
 }
@@ -166,7 +166,7 @@
         border: 0px;
         padding-left: 5px;
     }
-    
+
     li:nth-child(1) .menuTitle i {
         background-color: #a3150b;
     }

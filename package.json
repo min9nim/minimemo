@@ -1,0 +1,31 @@
+{
+  "name": "minimemo",
+  "version": "1.0.0",
+  "description": "private memo",
+  "main": "bundle.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/min9nim/minimemo.git"
+  },
+  "keywords": [
+    "memo"
+  ],
+  "author": "mg.song",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/min9nim/minimemo/issues"
+  },
+  "homepage": "https://github.com/min9nim/minimemo#readme",
+  "devDependencies": {
+    "babel-loader": "^7.1.4",
+    "css-loader": "^0.28.11",
+    "node-sass": "^4.9.0",
+    "sass-loader": "^7.0.1",
+    "style-loader": "^0.21.0",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.3"
+  }
+}
