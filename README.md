@@ -2,7 +2,7 @@
 minimemo 는 SNS 기능이 없는 개인용 **비공개** 한줄 블로그다. 마음 속에 잠깐 떠올랐다 사라지는 생각이나 아이디어들을 간단하게 저장하고 기록을 남길 수 있다
 
 ### 서비스 이용방법
-* 접근주소: https://minimemo.site
+* 접근주소: https://minimemo-3ea72.firebaseapp.com
 * 구글계정으로 로그인 가능
 * 끝
 
